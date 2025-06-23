@@ -1,0 +1,30 @@
+# Ignorar pasta de configuracao do VS Code Remote Containers
+.vscode-remote-containers/
+
+# Ignorar binarios e pacotes Go
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.o
+*.test
+*.prof
+
+# Saidas de build
+/bin/
+/pkg/
+
+# Configuracoes especificas do VS Code
+.vscode/
+.vscode-server/
+.vscode-remote/
+*.code-workspace
+
+# Cache de modulos Go
+/go.mod
+/go.sum
+
+# Arquivos de desenvolvimento local
+.env
+*.log
