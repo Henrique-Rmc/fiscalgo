@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"fmt"
@@ -7,22 +7,10 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
-func main() {
-	app := fiber.New()
-	app.Post("/upload", uploadImageHandler)
-
-	port := ":8080"
-	fmt.Printf("Servidor Iniciado em http://localhost%s\n", port)
-	err := app.Listen(port)
-	if err != nil {
-		fmt.Printf("Erro ao iniciar servidor Fiber: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func uploadImageHandler(c *fiber.Ctx) error {
+func UploadImageHandler(c *fiber.Ctx) error {
 	//O primeiro passo é extrair a imagem recbida do body, para isso
 	//devo usar a função c.FormFile("image") que vai extrair do formulario o parametro image
 	file, err := c.FormFile("image")
@@ -71,8 +59,10 @@ func uploadImageHandler(c *fiber.Ctx) error {
 		fmt.Printf("Erro inesperado ao verificar diretorio")
 		return c.Status(fiber.StatusInternalServerError).SendString("Erro ao verificar diretorio de upload")
 	}
+	newUUID := uuid.New()
+	newFileName := filepath.Join(newUUID.String() + lowerFileExtension)
 
-	filepath := filepath.Join(uploadDir, file.Filename)
+	filepath := filepath.Join(uploadDir, newFileName)
 
 	if err := c.SaveFile(file, filepath); err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Erro ao salvar o arquivo na pasta de destino")

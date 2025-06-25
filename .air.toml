@@ -1,0 +1,38 @@
+# Define a raiz do seu projeto Go (onde está o go.mod e este .air.toml)
+root = "."
+# Diretório temporário para os builds do Air
+tmp_dir = "tmp"
+
+[build]
+# Comando de build do Go.
+# '-o ./tmp/main.exe' define o caminho e nome do executável de saída.
+# './cmd' informa ao Go que o pacote principal (main) está dentro da pasta 'cmd'.
+# IMPORTANTE: Adicionado '.exe' ao nome do arquivo de saída para Windows.
+cmd = "go build -o ./tmp/main.exe ./cmd"
+# Caminho para o executável que será rodado.
+# IMPORTANTE: Adicionado '.exe' ao caminho do binário.
+bin = "./tmp/main.exe"
+# Argumentos passados para o binário (opcional)
+args = []
+# Variáveis de ambiente para o processo de build (opcional)
+env = []
+# Diretórios a serem excluídos do monitoramento (MUITO IMPORTANTE!)
+# 'uploads' deve ser excluído para evitar reinícios constantes ao salvar imagens.
+exclude_dir = ["assets", "tmp", "vendor", "node_modules", "uploads"]
+# Arquivos a serem excluídos do monitoramento (opcional)
+exclude_file = []
+# Expressões regulares para excluir arquivos do monitoramento (ex: arquivos de teste)
+exclude_regex = ["_test.go"]
+# Diretórios a serem explicitamente incluídos no monitoramento (opcional, pode deixar vazio)
+include_dir = []
+# Extensões de arquivo a serem monitoradas (importante para o live reload)
+include_ext = ["go", "tpl", "tmpl", "html"]
+# Se o Air deve parar de monitorar em caso de erro de build
+stop_on_error = true
+# Arquivo para logar erros de build
+log = "build-errors.log"
+
+[run]
+# Comando para rodar o binário compilado.
+# IMPORTANTE: Adicionado '.exe' ao caminho do binário.
+cmd = "./tmp/main.exe"
