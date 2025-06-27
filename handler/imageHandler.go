@@ -1,16 +1,30 @@
 package handler
 
 import (
+	"fiscalgo/model"
+	"fiscalgo/repository"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
-func UploadImageHandler(c *fiber.Ctx) error {
+type ImageHandlerInterface interface {
+	UploadImageHandler(c *fiber.Ctx) error
+}
+type ImageHander struct {
+	ImageRepo repository.ImageRepositoryInterface
+}
+
+func NewImageHander(imageRepo repository.ImageRepositoryInterface) ImageHandlerInterface {
+	return &ImageHander{ImageRepo: imageRepo}
+}
+
+func (h *ImageHander) UploadImageHandler(c *fiber.Ctx) error {
 	//O primeiro passo é extrair a imagem recbida do body, para isso
 	//devo usar a função c.FormFile("image") que vai extrair do formulario o parametro image
 	file, err := c.FormFile("image")
@@ -31,7 +45,7 @@ func UploadImageHandler(c *fiber.Ctx) error {
 			"message": "Verifique o formato da imagem e o reenvie.",
 		})
 	}
-	const maxFileSize = 5 * 1024 * 1024
+	const maxFileSize = 10 * 1024 * 1024
 
 	if file.Size > maxFileSize {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -60,13 +74,39 @@ func UploadImageHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).SendString("Erro ao verificar diretorio de upload")
 	}
 	newUUID := uuid.New()
-	newFileName := filepath.Join(newUUID.String() + lowerFileExtension)
+
+	newFileName := filepath.Join(newUUID.String(), lowerFileExtension)
 
 	filepath := filepath.Join(uploadDir, newFileName)
 
 	if err := c.SaveFile(file, filepath); err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Erro ao salvar o arquivo na pasta de destino")
 	}
+
+	ownerId := uuid.New()
+	url := "www.imagem.com"
+
+	imageToSave := model.Image{
+		// ID:             uint(0), // GORM geralmente preenche o ID para você em chaves primárias autoincrement
+		// Se seu ID for UUID no DB, você precisaria de um tipo string para UniqueFileName
+		// e criar um UUID para o ID. No seu modelo, ID é `uint`.
+		OwnerId:        uint(ownerId.ID()), // Exemplo: Substitua por um ID de usuário real (e.g., de autenticação)
+		UniqueFileName: newFileName,
+		Tags:           []string{"alimentacao"}, // Exemplo: Em um app real, isso viria de um campo de formulário
+		Description:    "",
+		Url:            url, // Para ambiente local, a URL pode ser o caminho. Para cloud, seria a URL do bucket.
+		UploadedAt:     time.Now(),
+	}
+
+	if err := h.ImageRepo.Create(&imageToSave); err != nil {
+		fmt.Printf("Erro ao salvar os metadados da imagem no banco de dados: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Erro ao salvar os dados da imagem no banco de dados.",
+			"message": "Ocorreu um erro interno ao registrar a imagem.",
+			"details": err.Error(),
+		})
+	}
+
 	fmt.Printf("Imagem salva com sucesso")
 	return c.Status(fiber.StatusOK).SendString("Imagem salva")
 
