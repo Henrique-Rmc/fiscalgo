@@ -11,20 +11,21 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 type ImageHandlerInterface interface {
 	UploadImageHandler(c *fiber.Ctx) error
 }
-type ImageHander struct {
+type ImageHandler struct {
 	ImageRepo repository.ImageRepositoryInterface
 }
 
-func NewImageHander(imageRepo repository.ImageRepositoryInterface) ImageHandlerInterface {
-	return &ImageHander{ImageRepo: imageRepo}
+func NewImageHandler(imageRepo repository.ImageRepositoryInterface) ImageHandlerInterface {
+	return &ImageHandler{ImageRepo: imageRepo}
 }
 
-func (h *ImageHander) UploadImageHandler(c *fiber.Ctx) error {
+func (h *ImageHandler) UploadImageHandler(c *fiber.Ctx) error {
 	//O primeiro passo é extrair a imagem recbida do body, para isso
 	//devo usar a função c.FormFile("image") que vai extrair do formulario o parametro image
 	file, err := c.FormFile("image")
@@ -75,7 +76,7 @@ func (h *ImageHander) UploadImageHandler(c *fiber.Ctx) error {
 	}
 	newUUID := uuid.New()
 
-	newFileName := filepath.Join(newUUID.String(), lowerFileExtension)
+	newFileName := newUUID.String() + lowerFileExtension
 
 	filepath := filepath.Join(uploadDir, newFileName)
 
@@ -83,17 +84,16 @@ func (h *ImageHander) UploadImageHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).SendString("Erro ao salvar o arquivo na pasta de destino")
 	}
 
-	ownerId := uuid.New()
 	url := "www.imagem.com"
 
 	imageToSave := model.Image{
 		// ID:             uint(0), // GORM geralmente preenche o ID para você em chaves primárias autoincrement
 		// Se seu ID for UUID no DB, você precisaria de um tipo string para UniqueFileName
 		// e criar um UUID para o ID. No seu modelo, ID é `uint`.
-		OwnerId:        uint(ownerId.ID()), // Exemplo: Substitua por um ID de usuário real (e.g., de autenticação)
+		OwnerId:        1, // Exemplo: Substitua por um ID de usuário real (e.g., de autenticação)
 		UniqueFileName: newFileName,
-		Tags:           []string{"alimentacao"}, // Exemplo: Em um app real, isso viria de um campo de formulário
-		Description:    "",
+		Tags:           pq.StringArray{"alimentacao"}, // Exemplo: Em um app real, isso viria de um campo de formulário
+		Description:    "Nota Fiscal de Almoço",
 		Url:            url, // Para ambiente local, a URL pode ser o caminho. Para cloud, seria a URL do bucket.
 		UploadedAt:     time.Now(),
 	}

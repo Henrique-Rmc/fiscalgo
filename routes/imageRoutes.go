@@ -6,6 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupImageRoutes(app *fiber.App, imageHandler *handler.ImageHander) {
-	app.Post("/upload", imageHandler.UploadImageHandler)
+func SetupImageRoutes(app *fiber.App, handler handler.ImageHandlerInterface) {
+	app.Post("/upload", handler.UploadImageHandler)
 }

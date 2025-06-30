@@ -8,14 +8,16 @@ import (
 	"gorm.io/gorm"            // O pacote principal do GORM
 )
 
-var DB *gorm.DB
+//*No arquivo do postgres realizamos a conexão do sistema com o postgres
+//
+// *
 
 func InitDB() (*gorm.DB, error) {
 	connStr := "user=postgres password=0102 host=localhost port=5432 dbname=postgres sslmode=disable"
 
 	var err error
 
-	DB, err = gorm.Open(postgres.Open(connStr), &gorm.Config{})
+	DB, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao abrir o banco de dados PostgreSQL: %w", err)
 	}

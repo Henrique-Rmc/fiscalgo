@@ -2,6 +2,8 @@ package main
 
 import (
 	"fiscalgo/database"
+	"fiscalgo/handler"
+	"fiscalgo/repository"
 	"fiscalgo/routes"
 	"fmt"
 	"os"
@@ -12,7 +14,11 @@ import (
 )
 
 func main() {
+	/**
+	A primeira parte da função main realiza a inicialização do banco de dados, essa conexão vai ser injetada no contexto
+	Fiber com a função app.Use()
 
+	**/
 	db, err := database.InitDB()
 	if err != nil {
 		fmt.Printf("Erro ao inicializar o banco de dados: %v\n", err)
@@ -22,11 +28,15 @@ func main() {
 	defer database.CloseDB(db)
 
 	app := fiber.New()
-	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("db", db)
-		return c.Next()
-	})
-	routes.SetupImageRoutes(app)
+	app.Use(
+		func(c *fiber.Ctx) error {
+			c.Locals("db", db)
+			return c.Next()
+		})
+	imageRepository := repository.NewImageRepo(db)
+	imageHandler := handler.NewImageHandler(imageRepository)
+
+	routes.SetupImageRoutes(app, imageHandler)
 
 	port := ":8080"
 	fmt.Printf("Servidor Iniciado em http://localhost%s\n", port)
