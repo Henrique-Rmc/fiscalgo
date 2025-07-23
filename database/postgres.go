@@ -2,52 +2,45 @@ package database
 
 import (
 	"fmt"
-	"time"
+	"log"
+	"os"
 
 	"gorm.io/driver/postgres" // Driver PostgreSQL para GORM
 	"gorm.io/gorm"            // O pacote principal do GORM
 )
 
-//*No arquivo do postgres realizamos a conexão do sistema com o postgres
-//
-// *
-
 func InitDB() (*gorm.DB, error) {
-	connStr := "user=postgres password=0102 host=localhost port=5432 dbname=postgres sslmode=disable"
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
 
-	var err error
+	log.Printf("DB_HOST: %s", dbHost)
+	log.Printf("DB_PORT: %s", dbPort)
+	log.Printf("DB_USER: %s", dbUser)
+	log.Printf("DB_PASSWORD: %s", dbPassword) // Cuidado ao imprimir senhas em logs de produção!
+	log.Printf("DB_NAME: %s", dbName)
 
-	DB, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
+	if dbHost == "" || dbPort == "" || dbUser == "" || dbPassword == "" || dbName == "" {
+		return nil, fmt.Errorf("Erro: Uma ou mais variáveis de ambiente do banco de dados estão vazias.")
+	}
+	dns := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		dbHost, dbPort, dbUser, dbPassword, dbName)
+	db, err := gorm.Open(postgres.Open(dns), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("erro ao abrir o banco de dados PostgreSQL: %w", err)
+		return nil, fmt.Errorf("Erro ao conectar ao banco de dados com GORM: %v", err)
 	}
-
-	sqlDB, err := DB.DB()
-
+	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, fmt.Errorf("erro ao conectar ao banco de dados PostgreSQL: %w", err)
+		return nil, fmt.Errorf("Erro ao obter a conexão SQL subjacente do GORM: %w", err)
 	}
-	sqlDB.SetConnMaxLifetime(time.Minute * 3) // Define o tempo máximo de vida da conexão
-	sqlDB.SetMaxOpenConns(10)                 // Define o número máximo de conexões abertas
-	sqlDB.SetMaxIdleConns(10)                 // Define o número máximo de conexões ociosas
-
-	if err = sqlDB.Ping(); err != nil {
-		return nil, fmt.Errorf("Erro ao conectar ao banco Postgres: %w", err)
-	}
-	fmt.Println("Conexão com o banco de dados PostgreSQL estabelecida via GORM.")
-
-	return DB, nil
-}
-
-func CloseDB(db *gorm.DB) {
-	if db != nil {
-		sqlDB, err := db.DB()
-		if err != nil {
-			fmt.Printf("Aviso: Erro ao obter conexão SQL subjacente para fechar: %v\n", err)
-			return
-		}
+	err = sqlDB.Ping()
+	if err != nil {
 		sqlDB.Close()
-		fmt.Println("Conexão com o banco de dados PostgreSQL (GORM) fechada.")
-
+		return nil, fmt.Errorf("Erro ao testar a conexão com o banco de dados: %w", err)
 	}
+
+	fmt.Println("Conexão com o banco de dados PostgreSQL via GORM estabelecida com sucesso!")
+	return db, nil
 }

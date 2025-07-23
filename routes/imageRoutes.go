@@ -1,8 +1,7 @@
 package routes
 
 import (
-	"fiscalgo/handler"
-
+	"github.com/Henrique-Rmc/fiscalgo/handler"
 	"github.com/gofiber/fiber/v2"
 )
 

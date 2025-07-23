@@ -1,8 +1,7 @@
 package repository
 
 import (
-	"fiscalgo/model"
-
+	"github.com/Henrique-Rmc/fiscalgo/model"
 	"gorm.io/gorm"
 )
 

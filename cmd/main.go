@@ -1,31 +1,34 @@
 package main
 
 import (
-	"fiscalgo/database"
-	"fiscalgo/handler"
-	"fiscalgo/repository"
-	"fiscalgo/routes"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/Henrique-Rmc/fiscalgo/database"
+	"github.com/Henrique-Rmc/fiscalgo/handler"
+	"github.com/Henrique-Rmc/fiscalgo/repository"
+	"github.com/Henrique-Rmc/fiscalgo/routes"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	/**
-	A primeira parte da função main realiza a inicialização do banco de dados, essa conexão vai ser injetada no contexto
-	Fiber com a função app.Use()
-
-	**/
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
 	db, err := database.InitDB()
 	if err != nil {
-		fmt.Printf("Erro ao inicializar o banco de dados: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Erro ao obter a conexão SQL subjacente para fechar: %v", err)
 	}
-
-	defer database.CloseDB(db)
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("Erro ao obter a conexão SQL subjacente para fechar: %v", err)
+	}
+	defer sqlDB.Close()
 
 	app := fiber.New()
 	app.Use(
@@ -53,7 +56,6 @@ func main() {
 
 	<-c
 	fmt.Println("\nSinal de desligamento recebido. Encerrando servidor Fiber...")
-
 	if err := app.Shutdown(); err != nil {
 		os.Exit(1)
 	}

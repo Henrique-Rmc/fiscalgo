@@ -1,14 +1,14 @@
 package handler
 
 import (
-	"fiscalgo/model"
-	"fiscalgo/repository"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/Henrique-Rmc/fiscalgo/model"
+	"github.com/Henrique-Rmc/fiscalgo/repository"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/lib/pq"

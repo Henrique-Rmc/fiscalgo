@@ -7,10 +7,10 @@ tmp_dir = "tmp"
 # Comando de build do Go.
 # '-o ./tmp/main.exe' define o caminho e nome do executável de saída.
 # './cmd' informa ao Go que o pacote principal (main) está dentro da pasta 'cmd'.
-# IMPORTANTE: Adicionado '.exe' ao nome do arquivo de saída para Windows.
+# IMPORTANTE: Ajuste './cmd' para o caminho real do seu pacote main,
+# por exemplo, './cmd/minha-aplicacao' se o main.go estiver lá.
 cmd = "go build -o ./tmp/main.exe ./cmd"
 # Caminho para o executável que será rodado.
-# IMPORTANTE: Adicionado '.exe' ao caminho do binário.
 bin = "./tmp/main.exe"
 # Argumentos passados para o binário (opcional)
 args = []
@@ -34,5 +34,14 @@ log = "build-errors.log"
 
 [run]
 # Comando para rodar o binário compilado.
-# IMPORTANTE: Adicionado '.exe' ao caminho do binário.
 cmd = "./tmp/main.exe"
+
+# ESTA LINHA É CRÍTICA para carregar as variáveis de ambiente do .env
+# Certifique-se de que o arquivo .env está no mesmo diretório que o air.toml
+env_file = [".env"] 
+
+# Se você tiver outras variáveis específicas para o Air, pode adicioná-las aqui
+# env = ["MY_CUSTOM_VAR=my_value"] 
+
+[misc]
+clean_on_exit = true
