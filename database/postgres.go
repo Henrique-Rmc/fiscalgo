@@ -5,8 +5,11 @@ import (
 	"log"
 	"os"
 
-	"gorm.io/driver/postgres" // Driver PostgreSQL para GORM
-	"gorm.io/gorm"            // O pacote principal do GORM
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func InitDB() (*gorm.DB, error) {
@@ -19,7 +22,7 @@ func InitDB() (*gorm.DB, error) {
 	log.Printf("DB_HOST: %s", dbHost)
 	log.Printf("DB_PORT: %s", dbPort)
 	log.Printf("DB_USER: %s", dbUser)
-	log.Printf("DB_PASSWORD: %s", dbPassword) // Cuidado ao imprimir senhas em logs de produção!
+	log.Printf("DB_PASSWORD: %s", dbPassword)
 	log.Printf("DB_NAME: %s", dbName)
 
 	if dbHost == "" || dbPort == "" || dbUser == "" || dbPassword == "" || dbName == "" {
@@ -43,4 +46,44 @@ func InitDB() (*gorm.DB, error) {
 
 	fmt.Println("Conexão com o banco de dados PostgreSQL via GORM estabelecida com sucesso!")
 	return db, nil
+}
+
+func RunMigrations(migrationPath string) error {
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	if dbHost == "" || dbPort == "" || dbUser == "" || dbPassword == "" || dbName == "" {
+		return fmt.Errorf("Erro: Uma ou mais variáveis de ambiente do banco de dados estão vazias para migrations.")
+	}
+
+	// DSN para o golang-migrate (formato ligeiramente diferente do GORM)
+	databaseURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		dbUser, dbPassword, dbHost, dbPort, dbName)
+
+	log.Printf("Executando migrations de %s para %s", migrationPath, databaseURL)
+
+	m, err := migrate.New(
+		migrationPath,
+		databaseURL,
+	)
+	if err != nil {
+		return fmt.Errorf("Falha ao criar instância de migrate: %w", err)
+	}
+	defer m.Close() // Garante que a instância de migrate seja fechada
+
+	// Aplica todas as migrations pendentes
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return fmt.Errorf("Falha ao aplicar migrations: %w", err)
+	}
+
+	if err == migrate.ErrNoChange {
+		log.Println("Nenhuma nova migration para aplicar.")
+	} else {
+		log.Println("Migrations aplicadas com sucesso!")
+	}
+
+	return nil
 }

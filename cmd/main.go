@@ -20,6 +20,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if len(os.Args) > 1 && os.Args[1] == "migrate" {
+		log.Println("Modo de execução: Migrations")
+
+		err := database.RunMigrations("file://./migrations")
+		if err != nil {
+			log.Fatalf("Erro ao executar migrations: %v", err)
+		}
+		log.Println("Migrations concluídas. Encerrando o serviço de migration.")
+		return
+	}
+
+	log.Println("Modo de execução: Aplicação principal")
 	db, err := database.InitDB()
 	if err != nil {
 		log.Fatalf("Erro ao obter a conexão SQL subjacente para fechar: %v", err)
