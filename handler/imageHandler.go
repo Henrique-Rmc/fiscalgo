@@ -8,11 +8,13 @@ import (
 
 	"github.com/Henrique-Rmc/fiscalgo/model"
 	"github.com/Henrique-Rmc/fiscalgo/service"
+	types "github.com/Henrique-Rmc/fiscalgo/types/image"
 	"github.com/gofiber/fiber/v2"
 )
 
 type ImageHandlerInterface interface {
 	UploadImageHandler(c *fiber.Ctx) error
+	DownloadImageHandler(c *fiber.Ctx) error
 }
 
 // *objeto imageHandler serve apenas para unir a interface aos metodos*/
@@ -24,6 +26,22 @@ func NewImageHandler(imageService service.ImageServiceInterface) ImageHandlerInt
 	return &ImageHandler{ImageService: imageService}
 }
 
+func (handler *ImageHandler) DownloadImageHandler(c *fiber.Ctx) error {
+	/**
+	Vai receber um json body com o id da foto que deve ser baixada
+	**/
+	uniqueName := new(types.GetUrlRequest)
+	fmt.Println(uniqueName)
+	if err := c.BodyParser(&uniqueName); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON("O nome da imagem é inválido")
+	}
+	url, err := handler.ImageService.DownloadImageService(c.Context(), uniqueName.UniqueName)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON("Ocorreu um erro ao tentar baixar a imagem")
+	}
+	fmt.Println(url)
+	return c.Status(fiber.StatusOK).JSON(url)
+}
 func (handler *ImageHandler) UploadImageHandler(c *fiber.Ctx) error {
 
 	/**Preciso receber o pedaço do multipart que contem o body json com meus dados e ebtão converter no meu

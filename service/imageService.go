@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
+	"time"
 
 	"github.com/Henrique-Rmc/fiscalgo/model"
 	"github.com/Henrique-Rmc/fiscalgo/repository"
@@ -13,6 +15,7 @@ import (
 
 type ImageServiceInterface interface {
 	UploadImageService(ctx context.Context, data model.ImageData) (*model.Image, error)
+	DownloadImageService(ctx context.Context, name string) (string, error)
 }
 
 type ImageService struct {
@@ -58,10 +61,33 @@ func (service *ImageService) UploadImageService(ctx context.Context, data model.
 		Description:    data.Body.Description,
 		Url:            url,
 	}
-	if err := service.ImageRepo.Create(&image); err != nil {
+	if err := service.ImageRepo.CreateImage(ctx, &image); err != nil {
 		fmt.Printf("Erro ao Inserir Imagem no Banco")
 		return nil, err
 	}
 	return &image, nil
 
+}
+
+func (service *ImageService) DownloadImageService(ctx context.Context, name string) (string, error) {
+	/*
+		Recebendo o id, buscar o nome da imagem que possui aquele id
+	*/
+	if err := service.ImageRepo.FindByUniqueFileName(ctx, name); err != nil {
+		return "Imagem Buscada não existe no Banco de dados", err
+	}
+	expireTime := 1 * time.Minute
+	presignedURL, err := service.MinioClient.PresignedGetObject(
+		ctx,
+		service.BucketName,
+		name,
+		expireTime,
+		nil,
+	)
+	if err != nil {
+		log.Printf("Erro ao gerar URL pré-assinada: %v", err)
+		return "", err
+	}
+
+	return presignedURL.String(), nil
 }
