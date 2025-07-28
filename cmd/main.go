@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -11,8 +12,11 @@ import (
 	"github.com/Henrique-Rmc/fiscalgo/handler"
 	"github.com/Henrique-Rmc/fiscalgo/repository"
 	"github.com/Henrique-Rmc/fiscalgo/routes"
+	"github.com/Henrique-Rmc/fiscalgo/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 func main() {
@@ -29,6 +33,33 @@ func main() {
 		}
 		log.Println("Migrations concluídas. Encerrando o serviço de migration.")
 		return
+	}
+
+	ctx := context.Background()
+	minioEndPoint := os.Getenv("MINIO_ENDPOINT")
+	minioAcessKey := os.Getenv("MINIO_ACCESS_KEY")
+	minioSecretKey := os.Getenv("MINIO_SECRET_KEY")
+	bucketName := os.Getenv("BUCKET_NAME")
+
+	minioClient, err := minio.New(minioEndPoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(minioAcessKey, minioSecretKey, ""),
+		Secure: false,
+	})
+	if err != nil {
+		log.Fatalln("Erro ao inicializar Minio", err)
+	}
+	found, err := minioClient.BucketExists(ctx, bucketName)
+	if err != nil {
+		log.Fatalln("Erro ao verificar bucket no MinIO:", err)
+	}
+	if !found {
+		err = minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
+		if err != nil {
+			log.Fatalln("Erro ao criar bucket no MinIO:", err)
+		}
+		log.Printf("Bucket '%s' criado com sucesso.", bucketName)
+	} else {
+		log.Printf("Conectado ao bucket '%s'.", bucketName)
 	}
 
 	log.Println("Modo de execução: Aplicação principal")
@@ -49,7 +80,8 @@ func main() {
 			return c.Next()
 		})
 	imageRepository := repository.NewImageRepo(db)
-	imageHandler := handler.NewImageHandler(imageRepository)
+	imageService := service.NewImageService(imageRepository, minioClient, bucketName)
+	imageHandler := handler.NewImageHandler(imageService)
 
 	routes.SetupImageRoutes(app, imageHandler)
 

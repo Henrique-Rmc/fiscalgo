@@ -1,33 +1,40 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/Henrique-Rmc/fiscalgo/model"
-	"github.com/Henrique-Rmc/fiscalgo/repository"
+	"github.com/Henrique-Rmc/fiscalgo/service"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
-	"github.com/lib/pq"
 )
 
 type ImageHandlerInterface interface {
 	UploadImageHandler(c *fiber.Ctx) error
 }
+
+// *objeto imageHandler serve apenas para unir a interface aos metodos*/
 type ImageHandler struct {
-	ImageRepo repository.ImageRepositoryInterface
+	ImageService service.ImageServiceInterface
 }
 
-func NewImageHandler(imageRepo repository.ImageRepositoryInterface) ImageHandlerInterface {
-	return &ImageHandler{ImageRepo: imageRepo}
+func NewImageHandler(imageService service.ImageServiceInterface) ImageHandlerInterface {
+	return &ImageHandler{ImageService: imageService}
 }
 
-func (h *ImageHandler) UploadImageHandler(c *fiber.Ctx) error {
-	//O primeiro passo é extrair a imagem recbida do body, para isso
-	//devo usar a função c.FormFile("image") que vai extrair do formulario o parametro image
+func (handler *ImageHandler) UploadImageHandler(c *fiber.Ctx) error {
+
+	/**Preciso receber o pedaço do multipart que contem o body json com meus dados e ebtão converter no meu
+	formato de imageBdy*/
+	body := new(model.ImageBody)
+	metadata := c.FormValue("metadata")
+
+	if err := json.Unmarshal([]byte(metadata), &body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON("Erro ao acessar matadata")
+	}
+
 	file, err := c.FormFile("image")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -36,7 +43,7 @@ func (h *ImageHandler) UploadImageHandler(c *fiber.Ctx) error {
 			"details": err.Error(),
 		})
 	}
-
+	/**Extrai fileExtension do file*/
 	fileExtension := filepath.Ext(file.Filename)
 	lowerFileExtension := strings.ToLower(fileExtension)
 
@@ -54,60 +61,34 @@ func (h *ImageHandler) UploadImageHandler(c *fiber.Ctx) error {
 			"message": "Verifique o tamanho da imagem e o reenvie.",
 		})
 	}
-	//Agora que tenho a imagem, devo verificar se já existe um diretório que vai
-	//salvar a imagem localmente
-	uploadDir := "./uploads"
-	//os.Stat verifica se o diretorio existe e gera o erro
-	//os.IsNotExist verifica se o erro retornado é de que o diretorio nao existe
-	//se o erro for de diretorio inexistente, criamos um diretorio
-	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-		fmt.Printf("O diretorio %s não existe...Criando agora", uploadDir)
-		//esse formato é a mesma coisa de
-		// _, err := os.Mkdir(uploadDir)
-		//if err != nil.....
+	src, err := file.Open()
 
-		if err = os.Mkdir(uploadDir, 0755); err != nil {
-			fmt.Printf("Erro ao criar o diretorio")
-			return c.Status(fiber.StatusInternalServerError).SendString("Erro Ao criar diretorio")
-		}
-	} else if err != nil {
-		fmt.Printf("Erro inesperado ao verificar diretorio")
-		return c.Status(fiber.StatusInternalServerError).SendString("Erro ao verificar diretorio de upload")
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erro ao abrir o arquivo."})
 	}
-	newUUID := uuid.New()
+	defer src.Close()
 
-	newFileName := newUUID.String() + lowerFileExtension
-
-	filepath := filepath.Join(uploadDir, newFileName)
-
-	if err := c.SaveFile(file, filepath); err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Erro ao salvar o arquivo na pasta de destino")
+	imageData := model.ImageData{
+		FileName:      file.Filename,
+		FileExtension: lowerFileExtension,
+		ContentType:   file.Header.Get("Content-Type"),
+		FileSize:      file.Size,
+		Body:          *body,
+		File:          src,
 	}
 
-	url := "www.imagem.com"
+	savedImage, err := handler.ImageService.UploadImageService(c.Context(), imageData)
+	if err != nil {
+		fmt.Printf("Erro ao salvar imagem: %v\n", err)
 
-	imageToSave := model.Image{
-		// ID:             uint(0), // GORM geralmente preenche o ID para você em chaves primárias autoincrement
-		// Se seu ID for UUID no DB, você precisaria de um tipo string para UniqueFileName
-		// e criar um UUID para o ID. No seu modelo, ID é `uint`.
-		OwnerId:        1, // Exemplo: Substitua por um ID de usuário real (e.g., de autenticação)
-		UniqueFileName: newFileName,
-		Tags:           pq.StringArray{"alimentacao"}, // Exemplo: Em um app real, isso viria de um campo de formulário
-		Description:    "Nota Fiscal de Almoço",
-		Url:            url, // Para ambiente local, a URL pode ser o caminho. Para cloud, seria a URL do bucket.
-		UploadedAt:     time.Now(),
-	}
-
-	if err := h.ImageRepo.Create(&imageToSave); err != nil {
-		fmt.Printf("Erro ao salvar os metadados da imagem no banco de dados: %v\n", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Erro ao salvar os dados da imagem no banco de dados.",
+			"error":   "Erro ao salvar imagem.",
 			"message": "Ocorreu um erro interno ao registrar a imagem.",
 			"details": err.Error(),
 		})
 	}
 
 	fmt.Printf("Imagem salva com sucesso")
-	return c.Status(fiber.StatusOK).SendString("Imagem salva")
+	return c.Status(fiber.StatusOK).JSON(savedImage)
 
 }
