@@ -79,12 +79,15 @@ func main() {
 			c.Locals("db", db)
 			return c.Next()
 		})
+	userRepository := repository.NewUserRepo(db)
+	userService := service.NewUserService(userRepository)
+	userHandler := handler.NewUserHandler(userService)
 	imageRepository := repository.NewImageRepo(db)
 	imageService := service.NewImageService(imageRepository, minioClient, bucketName)
 	imageHandler := handler.NewImageHandler(imageService)
 
 	routes.SetupImageRoutes(app, imageHandler)
-
+	routes.SetupUserRoutes(app, userHandler)
 	port := ":8080"
 	fmt.Printf("Servidor Iniciado em http://localhost%s\n", port)
 

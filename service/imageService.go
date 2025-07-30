@@ -55,6 +55,7 @@ func (service *ImageService) UploadImageService(ctx context.Context, data model.
 
 	newUUID := uuid.New()
 	image := model.Image{
+		ID:             newUUID,
 		OwnerId:        data.Body.OwnerId,
 		UniqueFileName: data.FileName + (newUUID).String(),
 		Tags:           data.Body.Tags,

@@ -2,19 +2,21 @@ package model
 
 import (
 	"io"
-	"time"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
+/*
+Ajustar o tipo do OwnerId que no momento esta sendo definido estaticamente com um tipo inconsistente
+*/
 type Image struct {
-	ID             uint           `gorm:"primaryKey" json:"id"`
-	OwnerId        uint           `gorm:"foreignKey" json:"owner_id"`
+	ID             uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
+	OwnerId        uuid.UUID      `gorm:"type:uuid;foreignKey" json:"owner_id"`
 	UniqueFileName string         `gorm:"not null;unique" json:"unique_file_name"`
 	Tags           pq.StringArray `gorm:"type:text[]" json:"tags"`
 	Description    string         `json:"description"`
 	Url            string         `json:"url"`
-	UploadedAt     time.Time      `gorm:"column:uploaded_at;default:CURRENT_TIMESTAMP" json:"uploaded_at"`
 }
 
 type ImageData struct {
@@ -27,7 +29,7 @@ type ImageData struct {
 }
 
 type ImageBody struct {
-	OwnerId     uint     `json:"ownerId" xml:"ownerId" form:"ownerId"`
-	Description string   `json:"description" xml:"description" form:"description"`
-	Tags        []string `json:"tags" xml:"tags" form:"tags"`
+	OwnerId     uuid.UUID `json:"ownerId" xml:"ownerId" form:"ownerId"`
+	Description string    `json:"description" xml:"description" form:"description"`
+	Tags        []string  `json:"tags" xml:"tags" form:"tags"`
 }
