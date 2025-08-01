@@ -83,7 +83,7 @@ func main() {
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(userService)
 	imageRepository := repository.NewImageRepo(db)
-	imageService := service.NewImageService(imageRepository, minioClient, bucketName)
+	imageService := service.NewImageService(imageRepository, userRepository, minioClient, bucketName)
 	imageHandler := handler.NewImageHandler(imageService)
 
 	routes.SetupImageRoutes(app, imageHandler)

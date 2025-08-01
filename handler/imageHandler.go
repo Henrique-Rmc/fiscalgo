@@ -10,6 +10,7 @@ import (
 	"github.com/Henrique-Rmc/fiscalgo/service"
 	types "github.com/Henrique-Rmc/fiscalgo/types/image"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type ImageHandlerInterface interface {
@@ -35,7 +36,8 @@ func (handler *ImageHandler) DownloadImageHandler(c *fiber.Ctx) error {
 	if err := c.BodyParser(&uniqueName); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON("O nome da imagem é inválido")
 	}
-	url, err := handler.ImageService.DownloadImageService(c.Context(), uniqueName.UniqueName)
+	staticUserId, err := uuid.Parse("6daa7ce0-6594-43ed-b583-c74bd6aa1a13")
+	url, err := handler.ImageService.DownloadImageService(c.Context(), staticUserId,uniqueName.UniqueName)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON("Ocorreu um erro ao tentar baixar a imagem")
 	}
