@@ -1,21 +1,13 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
-	"path/filepath"
-	"strings"
-
-	"github.com/Henrique-Rmc/fiscalgo/model"
 	"github.com/Henrique-Rmc/fiscalgo/service"
-	types "github.com/Henrique-Rmc/fiscalgo/types/image"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 type ImageHandlerInterface interface {
 	UploadImageHandler(c *fiber.Ctx) error
-	DownloadImageHandler(c *fiber.Ctx) error
+	// DownloadImageHandler(c *fiber.Ctx) error
 }
 
 // *objeto imageHandler serve apenas para unir a interface aos metodos*/
@@ -31,84 +23,73 @@ func (handler *ImageHandler) DownloadImageHandler(c *fiber.Ctx) error {
 	/**
 	Vai receber um json body com o id da foto que deve ser baixada
 	**/
-	uniqueName := new(types.GetUrlRequest)
-	fmt.Println(uniqueName)
-	if err := c.BodyParser(&uniqueName); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON("O nome da imagem é inválido")
-	}
-	staticUserId, err := uuid.Parse("6daa7ce0-6594-43ed-b583-c74bd6aa1a13")
-	url, err := handler.ImageService.DownloadImageService(c.Context(), staticUserId,uniqueName.UniqueName)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON("Ocorreu um erro ao tentar baixar a imagem")
-	}
-	fmt.Println(url)
-	return c.Status(fiber.StatusOK).JSON(url)
+	// uniqueName := new(types.GetUrlRequest)
+	// fmt.Println(uniqueName)
+	// if err := c.BodyParser(&uniqueName); err != nil {
+	// 	return c.Status(fiber.StatusBadRequest).JSON("O nome da imagem é inválido")
+	// }
+	// staticUserId, err := uuid.Parse("6daa7ce0-6594-43ed-b583-c74bd6aa1a13")
+	// url, err := handler.ImageService.DownloadImageService(c.Context(), staticUserId,uniqueName.UniqueName)
+	// if err != nil {
+	// 	return c.Status(fiber.StatusBadRequest).JSON("Ocorreu um erro ao tentar baixar a imagem")
+	// }
+	// fmt.Println(url)
+	return c.Status(fiber.StatusOK).JSON("")
 }
 func (handler *ImageHandler) UploadImageHandler(c *fiber.Ctx) error {
-
 	/**Preciso receber o pedaço do multipart que contem o body json com meus dados e ebtão converter no meu
 	formato de imageBdy*/
-	body := new(model.ImageBody)
-	metadata := c.FormValue("metadata")
-
-	if err := json.Unmarshal([]byte(metadata), &body); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON("Erro ao acessar matadata")
-	}
-
-	file, err := c.FormFile("image")
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error":   "Erro ao processar o upload do arquivo.",
-			"message": "Verifique se o arquivo foi enviado corretamente no campo 'image'.",
-			"details": err.Error(),
-		})
-	}
-	/**Extrai fileExtension do file*/
-	fileExtension := filepath.Ext(file.Filename)
-	lowerFileExtension := strings.ToLower(fileExtension)
-
-	if lowerFileExtension != ".jpg" && lowerFileExtension != ".png" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error":   "O formato da imagem selecionada não é valido.",
-			"message": "Verifique o formato da imagem e o reenvie.",
-		})
-	}
-	const maxFileSize = 10 * 1024 * 1024
-
-	if file.Size > maxFileSize {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error":   "O tamanho da imagem enviada ultrapassa o limite suportado.",
-			"message": "Verifique o tamanho da imagem e o reenvie.",
-		})
-	}
-	src, err := file.Open()
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erro ao abrir o arquivo."})
-	}
-	defer src.Close()
-
-	imageData := model.ImageData{
-		FileName:      file.Filename,
-		FileExtension: lowerFileExtension,
-		ContentType:   file.Header.Get("Content-Type"),
-		FileSize:      file.Size,
-		Body:          *body,
-		File:          src,
-	}
-
-	savedImage, err := handler.ImageService.UploadImageService(c.Context(), imageData)
-	if err != nil {
-		fmt.Printf("Erro ao salvar imagem: %v\n", err)
-
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Erro ao salvar imagem.",
-			"message": "Ocorreu um erro interno ao registrar a imagem.",
-			"details": err.Error(),
-		})
-	}
-
-	fmt.Printf("Imagem salva com sucesso")
-	return c.Status(fiber.StatusOK).JSON(savedImage)
-
+	// body := new(model.ImageData)
+	// metadata := c.FormValue("metadata")
+	// if err := json.Unmarshal([]byte(metadata), &body); err != nil {
+	// 	return c.Status(fiber.StatusBadRequest).JSON("Erro ao acessar matadata")
+	// }
+	// file, err := c.FormFile("image")
+	// if err != nil {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	// 		"error":   "Erro ao processar o upload do arquivo.",
+	// 		"message": "Verifique se o arquivo foi enviado corretamente no campo 'image'.",
+	// 		"details": err.Error(),
+	// 	})
+	// }
+	// /**Extrai fileExtension do file*/
+	// fileExtension := filepath.Ext(file.Filename)
+	// lowerFileExtension := strings.ToLower(fileExtension)
+	// if lowerFileExtension != ".jpg" && lowerFileExtension != ".png" {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	// 		"error":   "O formato da imagem selecionada não é valido.",
+	// 		"message": "Verifique o formato da imagem e o reenvie.",
+	// 	})
+	// }
+	// const maxFileSize = 10 * 1024 * 1024
+	// if file.Size > maxFileSize {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	// 		"error":   "O tamanho da imagem enviada ultrapassa o limite suportado.",
+	// 		"message": "Verifique o tamanho da imagem e o reenvie.",
+	// 	})
+	// }
+	// src, err := file.Open()
+	// if err != nil {
+	// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erro ao abrir o arquivo."})
+	// }
+	// defer src.Close()
+	// imageData := model.ImageData{
+	// 	FileName:      file.Filename,
+	// 	FileExtension: lowerFileExtension,
+	// 	ContentType:   file.Header.Get("Content-Type"),
+	// 	FileSize:      file.Size,
+	// 	Body:          *body,
+	// 	File:          src,
+	// }
+	// savedImage, err := handler.ImageService.UploadImageService(c.Context(), imageData)
+	// if err != nil {
+	// 	fmt.Printf("Erro ao salvar imagem: %v\n", err)
+	// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	// 		"error":   "Erro ao salvar imagem.",
+	// 		"message": "Ocorreu um erro interno ao registrar a imagem.",
+	// 		"details": err.Error(),
+	// 	})
+	// }
+	// fmt.Printf("Imagem salva com sucesso")
+	return c.Status(fiber.StatusOK).JSON("savedImage")
 }

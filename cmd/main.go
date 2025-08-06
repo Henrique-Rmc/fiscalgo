@@ -83,11 +83,12 @@ func main() {
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(userService)
 	imageRepository := repository.NewImageRepo(db)
-	imageService := service.NewImageService(imageRepository, userRepository, minioClient, bucketName)
-	imageHandler := handler.NewImageHandler(imageService)
-
-	routes.SetupImageRoutes(app, imageHandler)
+	imageService:= service.NewImageService(imageRepository,userRepository,minioClient, bucketName)
+	invoiceRepository := repository.NewInvoiceRepository(db)
+	invoiceService := service.NewInvoiceService(invoiceRepository,userRepository, imageService)
+	invoiceHandler := handler.NewInvoiceHandler(invoiceService)
 	routes.SetupUserRoutes(app, userHandler)
+	routes.SetupInvoiceRoutes(app, invoiceHandler)
 	port := ":8080"
 	fmt.Printf("Servidor Iniciado em http://localhost%s\n", port)
 

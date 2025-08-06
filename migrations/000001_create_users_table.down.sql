@@ -2,4 +2,11 @@ DROP TABLE IF EXISTS images;
 
 DROP TABLE IF EXISTS users;
 
+DROP TABLE IF EXISTS payments;
+
+DROP TABLE IF EXISTS clients;
+
+DROP TABLE IF EXISTS expenses;
+
+DROP TABLE IF EXISTS invoices;
 
