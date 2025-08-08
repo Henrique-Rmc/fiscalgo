@@ -26,20 +26,22 @@ func (service *UserService) CreateUser(ctx context.Context, data *model.UserData
 	Enviar para o repositorio salvar o usuario
 	*/
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	userId := uuid.New()
-	user := &model.User{
-		ID: userId,
-		Name: data.Name,
-		Email: data.Email,
-		PasswordHash: string(hashedPassword),
-		Occupation: data.Occupation,
+	userToSave := &model.User{
+		ID:                   userId,
+		Name:                 data.Name,
+		Email:                data.Email,
+		CPF:                  data.CPF,
+		PasswordHash:         string(hashedPassword),
+		Occupation:           data.Occupation,
+		ProfessionalRegistry: data.ProfessionalRegistry,
 	}
-	createdUser, err := service.UserRepo.CreateUser(ctx, user)
-	if err != nil{
-		return nil,err
+	_, err = service.UserRepo.CreateUser(ctx, userToSave)
+	if err != nil {
+		return nil, err
 	}
-	return createdUser, nil
+	return userToSave, nil
 }

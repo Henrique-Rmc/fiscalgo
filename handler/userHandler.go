@@ -18,14 +18,14 @@ func NewUserHandler(userService service.UserServiceInterface) UserHandlerInterfa
 	return &UserHandler{UserService: userService}
 }
 
-func (handler *UserHandler) CreateUser(c *fiber.Ctx) error {
+func (userHandler *UserHandler) CreateUser(c *fiber.Ctx) error {
 	body := new(model.UserData)
 	if err := c.BodyParser(body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "JSON invalido",
 		})
 	}
-	user, err := handler.UserService.CreateUser(c.Context(), body)
+	user, err := userHandler.UserService.CreateUser(c.Context(), body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "JSON invalido",
