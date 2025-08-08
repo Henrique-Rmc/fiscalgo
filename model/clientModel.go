@@ -13,7 +13,7 @@ type Client struct {
 	Cpf         string    `json:"cpf"`
 	Phone       string    `json:"phone"`
 	Email       string    `json:"email"`
-	AsksInvoice bool    `json:"asks_invoice"`
+	AsksInvoice bool      `json:"asks_invoice"`
 	CreatedAt   time.Time `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt   time.Time `gorm:"column:updated_at" json:"updated_at"`
 }
@@ -24,4 +24,11 @@ type ClientData struct {
 	Phone       string
 	Email       string
 	AsksInvoice bool
+}
+
+type ClientSearchCriteria struct {
+	UserId uuid.UUID
+	CPF    string
+	ID     string
+	Name   string
 }

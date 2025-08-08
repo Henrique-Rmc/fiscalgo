@@ -7,4 +7,5 @@ import (
 
 func SetupClientRoutes(app *fiber.App, handler handler.ClientHandlerInterface) {
 	app.Post("/client/create", handler.CreateClient)
+	app.Get("/client/", handler.FindClient)
 }

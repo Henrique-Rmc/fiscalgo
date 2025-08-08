@@ -12,6 +12,7 @@ import (
 
 type ClientServiceInterface interface {
 	CreateClient(ctx context.Context, clientData *model.ClientData, idUser string) (*model.Client, error)
+	FindClient(ctx context.Context, queryData *model.ClientSearchCriteria) ([]*model.Client, error)
 }
 
 type ClientService struct {
@@ -54,4 +55,16 @@ func (clientService *ClientService) CreateClient(ctx context.Context, clientData
 		return nil, err
 	}
 	return clientToSave, nil
+}
+
+func (clientService *ClientService) FindClient(ctx context.Context, queryData *model.ClientSearchCriteria) ([]*model.Client, error) {
+	/*Adicionar Regras de Negocio Futuramente*/
+	client, err := clientService.ClientRepo.FindClient(ctx, queryData)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return nil, err
+	}
+	return client, nil
 }
