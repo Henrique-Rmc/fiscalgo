@@ -1,17 +1,4 @@
 services:
-  migrate:
-    build:
-      context: .
-    environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-    depends_on:
-      - db
-    command: ["./main","migrate"]
-    restart: "no"
   fiscalgo:
     build:
       context: .
@@ -26,15 +13,31 @@ services:
       - DB_NAME=${DB_NAME}
     depends_on:
       - db
+      - minio
+      - redis
   db:
     image: postgres:16-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_ADDR=${REDIS_ADDR}
     ports:
       - "5432:5432"
     restart: always
+  migrate:
+    build:
+      context: .
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    depends_on:
+      - db
+    command: ["./main","migrate"]
+    restart: "no"
   minio:
     image: minio/minio
     ports:
@@ -44,3 +47,13 @@ services:
     - MINIO_ROOT_USER=${MINIO_ACCESS_KEY} 
     - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY} 
     command: server /data --console-address ":9001"
+  seeder:
+    build: .
+    command: ["./main", "--seed"]
+    depends_on:
+      - db
+  redis:
+    image: redis:7-alpine
+    ports:
+     - "6379:6379"
+

@@ -5,7 +5,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupClientRoutes(app *fiber.App, handler handler.ClientHandlerInterface) {
-	app.Post("/client/create", handler.CreateClient)
-	app.Get("/client/", handler.FindClient)
+func SetupClientRoutes(app *fiber.App, clientHandler handler.ClientHandlerInterface) {
+	clientRoutes := app.Group("/api/clients")
+	clientRoutes.Post("/create", clientHandler.CreateClient)
+	clientRoutes.Get("/", clientHandler.FindClient)
+	clientRoutes.Get("/:clientId", clientHandler.GetCliendById)
 }

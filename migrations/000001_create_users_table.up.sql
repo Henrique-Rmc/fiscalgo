@@ -34,8 +34,6 @@ CREATE TABLE IF NOT EXISTS revenues (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
-
 /*   
 Se Issue date for vazio, é o mesmo do Created_at
 */
@@ -66,4 +64,26 @@ VALUES(
     'hash_da_senha_gerado_pelo_bcrypt_aqui', 
     'dentista',
     'CRM-3333'
+);
+
+INSERT INTO clients(id,user_id, name, cpf, phone, email, asks_invoice)
+VALUES(
+    'ee31d0ea-14ce-45fd-b7d4-88beffd0c58c', 
+    '6daa7ce0-6594-43ed-b583-c74bd6aa1a13', 
+    'cliente Maria', 
+    '07665846235', 
+    '887797451', 
+    'clienteMaria@email', 
+    FALSE
+);
+
+INSERT INTO clients(id,user_id, name, cpf, phone, email, asks_invoice)
+VALUES(
+    '142c5b1b-4f27-4594-9be6-098e5f8a1216', 
+    '6daa7ce0-6594-43ed-b583-c74bd6aa1a13', 
+    'cliente Joao', 
+    '08457498536', 
+    '887797455', 
+    'clienteJoaoa@email', 
+    FALSE
 );

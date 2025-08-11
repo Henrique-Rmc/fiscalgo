@@ -10,6 +10,7 @@ import (
 type ClientHandlerInterface interface {
 	CreateClient(c *fiber.Ctx) error
 	FindClient(c *fiber.Ctx) error
+	GetCliendById(c *fiber.Ctx) error
 }
 
 type ClientHandler struct {
@@ -29,7 +30,11 @@ func (clientHandler *ClientHandler) CreateClient(c *fiber.Ctx) error {
 			"error": "JSON invalido",
 		})
 	}
-	client, err := clientHandler.ClientService.CreateClient(c.Context(), clientData, idUser)
+	uuidUser, err := uuid.Parse(idUser)
+	if err != nil {
+		return err
+	}
+	client, err := clientHandler.ClientService.CreateClient(c.Context(), clientData, uuidUser)
 	if err != nil {
 		return err
 	}
@@ -49,6 +54,27 @@ func (clientHandler *ClientHandler) FindClient(c *fiber.Ctx) error {
 		ID:     c.Query("id"),
 	}
 	client, err := clientHandler.ClientService.FindClient(c.Context(), &criteria)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "JSON invalido",
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(client)
+
+}
+
+func (clientHandler *ClientHandler) GetCliendById(c *fiber.Ctx) error {
+	idUser := "6daa7ce0-6594-43ed-b583-c74bd6aa1a13"
+	userUUID, err := uuid.Parse(idUser)
+	if err != nil {
+		return err
+	}
+	clientId := c.Params("clientId")
+	clientUUID, err := uuid.Parse(clientId)
+	if err != nil {
+		return err
+	}
+	client, err := clientHandler.ClientService.GetById(c.Context(), clientUUID, userUUID)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "JSON invalido",
