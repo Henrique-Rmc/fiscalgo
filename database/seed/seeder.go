@@ -71,7 +71,10 @@ func (s *Seeder) seedUser() (*model.User, error) {
 	// Se o ID for zero, significa que o usuário não existia e o GORM o inicializou. Agora vamos criar.
 	if existingUser.ID == uuid.Nil {
 		// Antes de criar, precisamos gerar o UUID do ID
-		existingUser.ID = uuid.New()
+		existingUser.ID, err = uuid.Parse("e6c45d98-e223-43de-a11c-de51cdfa6d1d")
+		if err != nil{
+			return nil, err
+		}
 		if err := s.DB.Create(&existingUser).Error; err != nil {
 			return nil, err
 		}

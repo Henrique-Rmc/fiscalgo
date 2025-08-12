@@ -59,6 +59,20 @@ func (clientService *clientService) CreateClient(ctx context.Context, clientData
 	if err != nil {
 		return nil, err
 	}
+	clientJson, err := json.Marshal(clientToSave)
+	if err != nil {
+		log.Println("ERRO DE CACHE: Falha ao serializar cliente")
+	}else{
+		key := fmt.Sprintf("client:%s", clientToSave.ID.String())
+		
+		err := clientService.RedisC.Set(ctx,key,clientJson, 10*time.Minute).Err()
+		if err != nil{
+			log.Println("ERRP DE CACHE: Falha ao salvar cliente no Cache")
+			return nil, err
+		}else{
+			log.Println("WRITE-THROUGH: Cliente", clientToSave.ID, "salvo no cache.")
+		}
+	}
 	return clientToSave, nil
 }
 
@@ -90,7 +104,7 @@ func (clientService *clientService) GetById(ctx context.Context, clientId uuid.U
 		}
 	}
 	if err != nil && err != redis.Nil {
-		log.Printf("Erro ao acessar o cache Redis: %v", err)
+		log.Printf("Erro ao acessar o cache Redis: %v , buscando no Banco", err)
 	}
 	log.Println("CACHE MISS para a chave:", key)
 	clientFromDb, err := clientService.ClientRepo.FindClientById(ctx, clientId)
