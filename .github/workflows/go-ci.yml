@@ -26,13 +26,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24.42' # Especifique a sua versão do Go
+          go-version: '1.24' # Especifique a sua versão do Go
           cache: true # Habilita o cache de dependências para acelerar builds futuros
 
       # Passo 3: Iniciar os Serviços de Dependência (DB, Redis, MinIO)
       # Aqui está a mágica: usamos o docker-compose para subir a infraestrutura.
       - name: Start services (DB, Redis, MinIO)
-        run: docker-compose up -d db redis minio
+        run: docker compose up -d db redis minio
         # O '-d' (detached) é crucial para que os serviços rodem em segundo plano
         # e o workflow possa continuar para o próximo passo.
 
@@ -76,4 +76,4 @@ jobs:
       #garante que este passo rodará mesmo se os testes falharem.
       - name: Stop services
         if: always()
-        run: docker-compose down
+        run: docker compose down
