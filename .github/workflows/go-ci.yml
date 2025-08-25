@@ -26,7 +26,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24.42' # Especifique a sua versão do Go
+          go-version: '1.24' # Especifique a sua versão do Go
           cache: true # Habilita o cache de dependências para acelerar builds futuros
 
       # Passo 3: Iniciar os Serviços de Dependência (DB, Redis, MinIO)
