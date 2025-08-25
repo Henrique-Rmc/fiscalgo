@@ -46,7 +46,28 @@ jobs:
       # Finalmente, executamos os testes. O comando é o mesmo que você usa localmente.
       # Usamos 'docker-compose run' para executar o comando no contexto do nosso app.
       - name: Run Go tests
-        # NOTA: Veja a seção sobre variáveis de ambiente abaixo!
+        env:
+          # Variáveis de Conexão com o Banco de Dados
+          # Usamos 'localhost' porque os testes rodam no runner do GitHub,
+          # e o Docker Compose expõe a porta do contêiner 'db' para o runner.
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: user
+          DB_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          DB_NAME: fiscalgo_db
+
+          # Variáveis de Conexão com o MinIO
+          MINIO_ENDPOINT: localhost:9000
+          MINIO_ACCESS_KEY: userminio
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+          BUCKET_NAME: fiscal-images
+          
+          # URL pública do MinIO que a aplicação usa para construir os links
+          MINIO_ENDPOINT_PUBLIC: http://localhost:9000
+
+          # Variável de Conexão com o Redis
+          REDIS_ADDR: localhost:6379
+
         run: go test ./... -v
         # O '-v' (verbose) mostra o resultado de cada teste, o que é ótimo para debugging.
       
