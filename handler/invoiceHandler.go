@@ -53,5 +53,5 @@ func (handler *InvoiceHandler) CreateInvoiceHandler(c *fiber.Ctx) error {
 			"error": "JSON invalido",
 		})
 	}
-	return c.Status(fiber.StatusAccepted).JSON(invoice)
+	return c.Status(fiber.StatusCreated).JSON(invoice)
 }

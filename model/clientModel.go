@@ -19,11 +19,11 @@ type Client struct {
 }
 
 type ClientData struct {
-	Name        string
-	Cpf         string
-	Phone       string
-	Email       string
-	AsksInvoice bool
+	Name        string  `json:"name" validate:"required,min=2"`
+	Cpf         string  `json:"cpf" validate:"required,len=11"` // Exige um CPF com exatamente 11 dígitos
+	Phone       string  `json:"phone" validate:"required"`
+	Email       *string `json:"email,omitempty" validate:"omitempty,email"` // Opcional, mas se for enviado, deve ser um email válido
+	AsksInvoice bool    `json:"asks_invoice"`                               // Bools são validados como 'true' ou 'false'
 }
 
 type ClientSearchCriteria struct {

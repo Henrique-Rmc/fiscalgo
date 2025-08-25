@@ -10,7 +10,7 @@ import (
 
 	"github.com/Henrique-Rmc/fiscalgo/model"
 	"github.com/Henrique-Rmc/fiscalgo/repository"
-	"github.com/google/uuid"
+	"github.com/google/uuid" 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -52,7 +52,7 @@ func (clientService *clientService) CreateClient(ctx context.Context, clientData
 		Name:        clientData.Name,
 		Cpf:         clientData.Cpf,
 		Phone:       clientData.Phone,
-		Email:       clientData.Email,
+		Email:       *clientData.Email,
 		AsksInvoice: clientData.AsksInvoice,
 	}
 	err = clientService.ClientRepo.CreateClient(ctx, clientToSave)
@@ -64,7 +64,7 @@ func (clientService *clientService) CreateClient(ctx context.Context, clientData
 		log.Println("ERRO DE CACHE: Falha ao serializar cliente")
 	}else{
 		key := fmt.Sprintf("client:%s", clientToSave.ID.String())
-		
+		 
 		err := clientService.RedisC.Set(ctx,key,clientJson, 10*time.Minute).Err()
 		if err != nil{
 			log.Println("ERRP DE CACHE: Falha ao salvar cliente no Cache")

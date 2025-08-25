@@ -38,7 +38,7 @@ func (clientHandler *ClientHandler) CreateClient(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return c.Status(fiber.StatusOK).JSON(client)
+	return c.Status(fiber.StatusCreated).JSON(client)
 }
 
 func (clientHandler *ClientHandler) FindClient(c *fiber.Ctx) error {
