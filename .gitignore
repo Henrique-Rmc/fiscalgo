@@ -21,10 +21,6 @@
 .vscode-remote/
 *.code-workspace
 
-# Cache de modulos Go
-/go.mod
-/go.sum
-
 # Arquivos de desenvolvimento local
 .env
 *.log
