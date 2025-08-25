@@ -1,0 +1,58 @@
+# Nome do seu workflow. Aparecerá na aba "Actions" do seu repositório.
+name: Go CI - Build and Test
+
+# Define os gatilhos (triggers) que iniciarão este workflow.
+on:
+  # Roda quando um push é feito para a branch 'main'.
+  push:
+    branches: [ "main" ]
+  # Roda quando um pull request é aberto (ou atualizado) para a branch 'main'.
+  pull_request:
+    branches: [ "main" ]
+
+# Define os "trabalhos" (jobs) que serão executados.
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Passo 1: Checkout do Código
+      # Usa uma "Action" pré-construída pela comunidade para baixar o seu código para a máquina virtual.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Passo 2: Configurar o Ambiente Go
+      # Usa outra Action para instalar a versão correta do Go.
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.42' # Especifique a sua versão do Go
+          cache: true # Habilita o cache de dependências para acelerar builds futuros
+
+      # Passo 3: Iniciar os Serviços de Dependência (DB, Redis, MinIO)
+      # Aqui está a mágica: usamos o docker-compose para subir a infraestrutura.
+      - name: Start services (DB, Redis, MinIO)
+        run: docker-compose up -d db redis minio
+        # O '-d' (detached) é crucial para que os serviços rodem em segundo plano
+        # e o workflow possa continuar para o próximo passo.
+
+      # Passo 4: Esperar os Serviços Iniciarem
+      # Adicionamos uma pequena pausa para garantir que o PostgreSQL esteja pronto
+      # para aceitar conexões antes que os testes comecem.
+      - name: Wait for services to be ready
+        run: sleep 10
+
+      # Passo 5: Rodar os Testes
+      # Finalmente, executamos os testes. O comando é o mesmo que você usa localmente.
+      # Usamos 'docker-compose run' para executar o comando no contexto do nosso app.
+      - name: Run Go tests
+        # NOTA: Veja a seção sobre variáveis de ambiente abaixo!
+        run: go test ./... -v
+        # O '-v' (verbose) mostra o resultado de cada teste, o que é ótimo para debugging.
+      
+      # Passo 6: Parar os Serviços (Limpeza)
+      # Este passo é opcional, mas uma boa prática para limpar os recursos.
+      #garante que este passo rodará mesmo se os testes falharem.
+      - name: Stop services
+        if: always()
+        run: docker-compose down
