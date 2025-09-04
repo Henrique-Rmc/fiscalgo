@@ -111,19 +111,27 @@ func main() {
 			return c.Next()
 		})
 	userRepository := repository.NewUserRepo(db)
-	userService := service.NewUserService(userRepository, rdb)
-	userHandler := handler.NewUserHandler(userService)
 	imageRepository := repository.NewImageRepo(db)
-	imageService := service.NewImageService(imageRepository, userRepository, minioClient, bucketName)
-	invoiceRepository := repository.NewInvoiceRepository(db)
-	invoiceService := service.NewInvoiceService(invoiceRepository, userRepository, imageService)
-	invoiceHandler := handler.NewInvoiceHandler(invoiceService)
 	clientRepository := repository.NewClientRepository(db)
+	invoiceRepository := repository.NewInvoiceRepository(db)
+	revenueRepository := repository.NewRevenueRepository(db)
+
+	userService := service.NewUserService(userRepository, rdb)
+	imageService := service.NewImageService(imageRepository, userRepository, minioClient, bucketName)
 	clientService := service.NewClientService(clientRepository, userRepository, rdb)
+	invoiceService := service.NewInvoiceService(invoiceRepository, userRepository, imageService)
+	revenueService := service.NewRevenueService(revenueRepository, clientRepository)
+
+	userHandler := handler.NewUserHandler(userService)
+	invoiceHandler := handler.NewInvoiceHandler(invoiceService)
 	clientHandler := handler.NewClientHandler(clientService)
+	revenueHandler := handler.NewRevenueHandler(revenueService)
+
 	routes.SetupClientRoutes(app, clientHandler)
 	routes.SetupUserRoutes(app, userHandler)
 	routes.SetupInvoiceRoutes(app, invoiceHandler)
+	routes.SetupRevenueRoutes(app, revenueHandler)
+
 	port := ":8080"
 	fmt.Printf("Servidor Iniciado em http://localhost%s\n", port)
 

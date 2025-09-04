@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS revenues (
     user_id UUID NOT NULL REFERENCES users(id),
     client_id UUID NOT NULL REFERENCES clients(id),
     beneficiary_cpf_cnpj VARCHAR(255) NOT NULL,
+    procedure_type VARCHAR(255) NOT NULL,
     value DECIMAL(10, 2) NOT NULL,
     total_paid DECIMAL(10,2) NOT NULL,
     description VARCHAR(255) NOT NULL,

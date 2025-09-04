@@ -6,11 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
+	ap "github.com/Henrique-Rmc/fiscalgo/apperror"
 	"github.com/Henrique-Rmc/fiscalgo/model"
 	"github.com/Henrique-Rmc/fiscalgo/repository"
-	"github.com/google/uuid" 
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -55,25 +57,82 @@ func (clientService *clientService) CreateClient(ctx context.Context, clientData
 		Email:       *clientData.Email,
 		AsksInvoice: clientData.AsksInvoice,
 	}
-	err = clientService.ClientRepo.CreateClient(ctx, clientToSave)
-	if err != nil {
-		return nil, err
-	}
-	clientJson, err := json.Marshal(clientToSave)
-	if err != nil {
-		log.Println("ERRO DE CACHE: Falha ao serializar cliente")
-	}else{
-		key := fmt.Sprintf("client:%s", clientToSave.ID.String())
-		 
-		err := clientService.RedisC.Set(ctx,key,clientJson, 10*time.Minute).Err()
-		if err != nil{
-			log.Println("ERRP DE CACHE: Falha ao salvar cliente no Cache")
-			return nil, err
-		}else{
-			log.Println("WRITE-THROUGH: Cliente", clientToSave.ID, "salvo no cache.")
+	//Cria um wait group para inserir o que desejamos consumir em sequencia
+
+	var wg sync.WaitGroup
+
+	errCh := make(chan error, 2)
+	wg.Add(1)
+	go clientService.saveOnDb(errCh, &wg, ctx, clientToSave)
+	wg.Add(1)
+	go clientService.saveOnCache(errCh, &wg, ctx, clientToSave)
+
+	go func() {
+		wg.Wait()
+		close(errCh)
+	}()
+	var fatalErr error
+
+	for err := range errCh {
+		if err == nil {
+			continue
+		}
+		opErr, ok := err.(*ap.OperationError)
+		if !ok {
+			fatalErr = err
+			continue
+		}
+		if opErr.IsFatal {
+			fatalErr = opErr
+		} else {
+			log.Printf("Houve um Erro Não Fatal ao salvar o dado no Cache")
 		}
 	}
+	if fatalErr != nil {
+		return nil, fatalErr
+	}
 	return clientToSave, nil
+	// err = clientService.ClientRepo.CreateClient(ctx, clientToSave)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// clientJson, err := json.Marshal(clientToSave)
+	// if err != nil {
+	// 	log.Println("Falha ao serializar cliente")
+	// 	return clientToSave, nil
+	// }
+	// key := fmt.Sprintf("client:%s", clientToSave.ID.String())
+
+	// err = clientService.RedisC.Set(ctx, key, clientJson, 10*time.Minute).Err()
+	// if err != nil {
+	// 	log.Println("ERRP DE CACHE: Falha ao salvar cliente no Cache")
+	// 	return clientToSave, nil
+	// }
+	// log.Println("WRITE-THROUGH: Cliente", clientToSave.ID, "salvo no cache.")
+
+}
+
+func (clientService *clientService) saveOnDb(ch chan<- error, wg *sync.WaitGroup, ctx context.Context, client *model.Client) {
+	defer wg.Done()
+	err := clientService.ClientRepo.CreateClient(ctx, client)
+	if err != nil {
+		ch <- &ap.OperationError{OriginalErr: err, IsFatal: true}
+	}
+	ch <- nil
+}
+
+func (clientService *clientService) saveOnCache(ch chan<- error, wg *sync.WaitGroup, ctx context.Context, client *model.Client) {
+	defer wg.Done()
+	jsonClient, err := json.Marshal(client)
+	if err != nil {
+		ch <- &ap.OperationError{OriginalErr: err, IsFatal: false}
+	}
+	key := fmt.Sprintf("client:%s", client.ID.String())
+	err = clientService.RedisC.Set(ctx, key, jsonClient, 10*time.Minute).Err()
+	if err != nil {
+		ch <- &ap.OperationError{OriginalErr: err, IsFatal: false}
+	}
+	ch <- nil
 }
 
 func (clientService *clientService) FindClient(ctx context.Context, queryData *model.ClientSearchCriteria) ([]*model.Client, error) {
@@ -107,7 +166,7 @@ func (clientService *clientService) GetById(ctx context.Context, clientId uuid.U
 		log.Printf("Erro ao acessar o cache Redis: %v , buscando no Banco", err)
 	}
 	log.Println("CACHE MISS para a chave:", key)
-	clientFromDb, err := clientService.ClientRepo.FindClientById(ctx, clientId)
+	clientFromDb, err := clientService.ClientRepo.FindClientById(ctx, clientId, userId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, gorm.ErrRecordNotFound

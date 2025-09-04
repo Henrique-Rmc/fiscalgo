@@ -13,6 +13,7 @@ import (
 
 type InvoiceServiceInterface interface {
 	CreateInvoice(ctx context.Context, invoiceBody *model.InvoiceBody, imageData *model.ImageHeader) (*model.Invoice, error)
+	// FindInvoice(ctx context.Context, )
 }
 
 type InvoiceService struct {
