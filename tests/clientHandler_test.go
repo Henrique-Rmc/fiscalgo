@@ -30,8 +30,8 @@ cria uma variavel args que vai ser do tipo m(mockService) passando os dados que 
 Nesse momento os dados sao atribuidos ao args(0)
 Verificamos se algo realmente foi inserido no args(0) e se foi, acessamos o retorno esperado
 */
-func (m *MockClientService) CreateClient(ctx context.Context, clientData *model.ClientData, idUser uuid.UUID) (*model.Client, error) {
-	args := m.Called(ctx, clientData, idUser)
+func (m *MockClientService) CreateClient(ctx context.Context, ClientDto *model.ClientDto, idUser uuid.UUID) (*model.Client, error) {
+	args := m.Called(ctx, ClientDto, idUser)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -66,7 +66,7 @@ func TestClientApi(t *testing.T) {
 
 	email := "joao.teste@email.com"
 	userUuid, _ := uuid.Parse("6daa7ce0-6594-43ed-b583-c74bd6aa1a13")
-	createClientData := model.ClientData{
+	createClientDto := model.ClientDto{
 		Name:        "joao Teste",
 		Email:       &email,
 		Cpf:         "11122233344",
@@ -76,19 +76,19 @@ func TestClientApi(t *testing.T) {
 	mockClient := &model.Client{
 		ID:          uuid.New(),
 		UserId:      userUuid,
-		Name:        createClientData.Name,
-		Email:       *createClientData.Email,
-		Cpf:         createClientData.Cpf,
-		Phone:       createClientData.Phone,
-		AsksInvoice: createClientData.AsksInvoice,
+		Name:        createClientDto.Name,
+		Email:       *createClientDto.Email,
+		Cpf:         createClientDto.Cpf,
+		Phone:       createClientDto.Phone,
+		AsksInvoice: createClientDto.AsksInvoice,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
 
 	t.Run("Should Create Client Successfully", func(t *testing.T) {
 
-		requestedBody, _ := json.Marshal(createClientData)
-		mockClientService.On("CreateClient", mock.Anything, &createClientData, userUuid).Return(mockClient, nil).Once()
+		requestedBody, _ := json.Marshal(createClientDto)
+		mockClientService.On("CreateClient", mock.Anything, &createClientDto, userUuid).Return(mockClient, nil).Once()
 		req := httptest.NewRequest(http.MethodPost, "/api/clients/create", bytes.NewReader(requestedBody))
 		req.Header.Set("Content-Type", "application/json")
 

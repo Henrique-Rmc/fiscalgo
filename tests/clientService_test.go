@@ -11,4 +11,4 @@ type MockClientRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) CreateClient(ctx context.Context, clientData *model.ClientData)
+func (m *MockUserRepository) CreateClient(ctx context.Context, ClientDto *model.ClientDto)

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS revenues (
     value DECIMAL(10, 2) NOT NULL,
     total_paid DECIMAL(10,2) NOT NULL,
     description VARCHAR(255) NOT NULL,
+    is_declared BOOLEAN NOT NULL DEFAULT FALSE,
     issue_date DATE NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

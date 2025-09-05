@@ -17,9 +17,10 @@ type RevenueRepositoryInterface interface {
 	Create(ctx context.Context, revenue *model.Revenue) error
 	FindByID(ctx context.Context, revenueID, userID uuid.UUID) (*model.Revenue, error)
 	FindAllByUserID(ctx context.Context, userID uuid.UUID) ([]*model.Revenue, error)
+	DeclareRevenue(ctx context.Context, userID uuid.UUID, revenueID uuid.UUID) error
 	Update(ctx context.Context, revenue *model.Revenue) error
 	Delete(ctx context.Context, revenueID, userID uuid.UUID) error
-	Find(ctx context.Context, criteria model.RevenueSearchCriteria) ([]*model.Revenue, error)
+	Find(ctx context.Context, criteria *model.RevenueSearchCriteria) ([]*model.Revenue, error)
 }
 
 // RevenueRepository é a implementação da interface.
@@ -30,6 +31,19 @@ type RevenueRepository struct {
 // NewRevenueRepository é o construtor do repositório.
 func NewRevenueRepository(db *gorm.DB) RevenueRepositoryInterface {
 	return &RevenueRepository{DB: db}
+}
+
+func (r *RevenueRepository) DeclareRevenue(ctx context.Context, userID uuid.UUID, revenueID uuid.UUID) error {
+	result := r.DB.WithContext(ctx).
+		Model(&model.Revenue{}).
+		Where("user_id = ? AND id = ?", userID, revenueID).Update("is_declared", true)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return ErrRevenueNotFound
+	}
+	return nil
 }
 
 // Create insere uma nova receita no banco de dados.
@@ -85,20 +99,20 @@ func (r *RevenueRepository) Delete(ctx context.Context, revenueID, userID uuid.U
 	result := r.DB.WithContext(ctx).
 		Where("id = ? AND user_id = ?", revenueID, userID).
 		Delete(&model.Revenue{})
-	
+
 	if result.Error != nil {
 		return result.Error
 	}
-	
+
 	// Verifique se alguma linha foi realmente afetada. Se não, a receita não existia.
 	if result.RowsAffected == 0 {
 		return ErrRevenueNotFound
 	}
-	
+
 	return nil
 }
 
-func (r *RevenueRepository) Find(ctx context.Context, criteria model.RevenueSearchCriteria) ([]*model.Revenue, error) {
+func (r *RevenueRepository) Find(ctx context.Context, criteria *model.RevenueSearchCriteria) ([]*model.Revenue, error) {
 	var revenues []*model.Revenue
 
 	// 1. Começa a consulta, sempre filtrando pelo dono (user_id). ESSENCIAL PARA SEGURANÇA.
@@ -117,23 +131,24 @@ func (r *RevenueRepository) Find(ctx context.Context, criteria model.RevenueSear
 		// Usa ILIKE para uma busca de texto flexível e case-insensitive.
 		query = query.Where("description ILIKE ?", "%"+criteria.ProcedureType+"%")
 	}
-
+	if criteria.OnlyInDebt {
+		query = query.Where("total_paid < value")
+	}
+	if criteria.IsDeclared {
+		query = query.Where("is_declared = ?", criteria.IsDeclared)
+	}
 	if criteria.StartDate != "" {
 		// Adiciona um filtro de data "maior ou igual a".
 		query = query.Where("issue_date >= ?", criteria.StartDate)
 	}
 
 	if criteria.EndDate != "" {
-		// Adiciona um filtro de data "menor ou igual a".
 		query = query.Where("issue_date <= ?", criteria.EndDate)
 	}
 
-	// 3. Executa a consulta final e preenche o slice 'revenues'.
-	//    Adicionamos uma ordenação padrão para resultados consistentes.
 	if err := query.Order("issue_date DESC").Find(&revenues).Error; err != nil {
 		return nil, err
 	}
 
-	// 4. Retorna o slice de receitas (pode estar vazio, não é um erro).
 	return revenues, nil
 }

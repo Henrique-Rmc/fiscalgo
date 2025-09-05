@@ -9,50 +9,54 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"math/rand"
+	"time"
 )
 
-// Seeder contém a conexão com o banco de dados.
 type Seeder struct {
 	DB *gorm.DB
 }
 
-// NewSeeder é o construtor do nosso seeder.
 func NewSeeder(db *gorm.DB) *Seeder {
 	return &Seeder{DB: db}
 }
 
-// Seed é o método principal que orquestra a criação dos dados.
 func (s *Seeder) Seed() {
 	log.Println("Iniciando o processo de seeding...")
 
-	// 1. Crie um usuário. A função seedUser retornará o usuário criado ou já existente.
 	user, err := s.seedUser()
 	if err != nil {
 		log.Fatalf("Erro ao semear usuário: %v", err)
 	}
 	log.Printf("Usuário semeado/encontrado: %s", user.Email)
 
-	// 2. Crie 10 clientes (pacientes) para este usuário.
 	for i := 0; i < 10; i++ {
-		_, err := s.seedClient(user)
+		client, err := s.seedClient(user)
 		if err != nil {
 			log.Fatalf("Erro ao semear cliente: %v", err)
 		}
+		numRevenues := rand.Intn(5) + 1
+	for j := 0; j < numRevenues; j++ {
+		_, err := s.seedRevenue(user, client)
+		if err != nil {
+			log.Fatalf("Erro ao semear receita para o cliente %s: %v", client.Name, err)
+		}
+		
 	}
 	log.Println("10 clientes semeados com sucesso.")
+
+	
 }
 
-// seedUser cria um usuário de teste se ele não existir.
+}
 func (s *Seeder) seedUser() (*model.User, error) {
-	// Gere um hash para a senha '123456'
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
-	// Crie o objeto de usuário com dados fixos/falsos
 	user := model.User{
-		Email:                "dentista@email.com", // Usaremos o email como chave para verificar a existência
+		Email:                "dentista@email.com", 
 		Name:                 "Dr. Exemplo da Silva",
 		CPF:                  faker.CCNumber(),
 		PasswordHash:         string(passwordHash),
@@ -95,7 +99,6 @@ func (s *Seeder) seedClient(user *model.User) (*model.Client, error) {
 		UserId: user.ID,
 	}
 
-	// Verifique se um cliente com este CPF já existe PARA ESTE USUÁRIO
 	var existingClient model.Client
 	err := s.DB.Where(model.Client{Cpf: client.Cpf, UserId: user.ID}).FirstOrInit(&existingClient, client).Error
 	if err != nil {
@@ -110,4 +113,56 @@ func (s *Seeder) seedClient(user *model.User) (*model.Client, error) {
 	}
 
 	return &existingClient, nil
+}
+
+// (NOVO) seedRevenue cria uma receita de teste para um cliente e usuário específicos.
+func (s *Seeder) seedRevenue(user *model.User, client *model.Client) (*model.Revenue, error) {
+// Lista de procedimentos para tornar os dados mais realistas
+	procedures := []string{"Consulta de Rotina", "Limpeza e Profilaxia", "Restauração", "Extração de Siso", "Clareamento Dental"}
+
+	// Gera um valor aleatório para a receita
+	value := float64(rand.Intn(1400) + 100) // Valor entre 100 e 1500
+
+	// Simula se a receita foi paga totalmente, parcialmente ou nada
+	var totalPaid float64
+	paymentStatus := rand.Intn(3) // Gera 0, 1, ou 2
+	switch paymentStatus {
+		case 0:
+			totalPaid = value // Totalmente paga
+		case 1:
+			totalPaid = value * (rand.Float64()*0.5 + 0.2) // Parcialmente paga (20% a 70%)
+		default:
+			totalPaid = 0 // Não paga
+		}
+
+	revenue := model.Revenue{
+		UserID:             user.ID,
+		ClientID:           &client.ID, // Passa o ponteiro para o ID do cliente
+		ProcedureType:      procedures[rand.Intn(len(procedures))],
+		BeneficiaryCpfCnpj: client.Cpf,
+		Value:              value,
+		TotalPaid:          totalPaid,
+		Description:        faker.Sentence(),
+		IssueDate:          time.Now().AddDate(0, -rand.Intn(6), -rand.Intn(28)), // Data aleatória nos últimos 6 meses
+		IsDeclared:         rand.Intn(2) == 1, // 50% de chance de ser true ou false
+		}
+
+	// Para idempotência, verificamos uma combinação de cliente e data para evitar duplicatas exatas.
+	var existingRevenue model.Revenue
+	err := s.DB.Where("client_id = ? AND issue_date = ? AND value = ?", client.ID, revenue.IssueDate.Format("2006-01-02"), revenue.Value).
+	FirstOrInit(&existingRevenue, revenue).Error
+		if err != nil {
+		return nil, err
+		}
+
+		if existingRevenue.ID == uuid.Nil {
+			existingRevenue.ID = uuid.New()
+		if err := s.DB.Create(&existingRevenue).Error; err != nil {
+			return nil, err
+		}
+		}
+
+	return &existingRevenue, nil
+
+
 }

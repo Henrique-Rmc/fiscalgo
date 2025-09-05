@@ -9,7 +9,7 @@ import (
 	"github.com/Henrique-Rmc/fiscalgo/model"
 )
 
-func ExtractImageData(file *multipart.FileHeader) (*model.ImageHeader, error) {
+func ExtractImageData(file *multipart.FileHeader) (*model.ImageDto, error) {
 	if file == nil {
 		return nil, nil
 	}
@@ -27,7 +27,7 @@ func ExtractImageData(file *multipart.FileHeader) (*model.ImageHeader, error) {
 	if err != nil {
 		return nil, errors.New("não foi possível ler o arquivo enviado")
 	}
-	imageData := model.ImageHeader{
+	imageData := model.ImageDto{
 		FileName:      file.Filename,
 		FileExtension: lowerFileExtension,
 		ContentType:   file.Header.Get("Content-Type"),

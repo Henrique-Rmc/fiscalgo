@@ -13,7 +13,7 @@ import (
 )
 
 type UserServiceInterface interface {
-	CreateUser(ctx context.Context, data *model.UserData) (*model.User, error)
+	CreateUser(ctx context.Context, data *model.UserDto) (*model.User, error)
 	GetUserById(ctx context.Context, userId uuid.UUID) (*model.User, error)
 }
 
@@ -25,7 +25,7 @@ func NewUserService(repo repository.UserRepositoryInterface, redis *redis.Client
 	return &userService{UserRepo: repo}
 }
 
-func (service *userService) CreateUser(ctx context.Context, data *model.UserData) (*model.User, error) {
+func (service *userService) CreateUser(ctx context.Context, data *model.UserDto) (*model.User, error) {
 	/*Receber o UserModel, aplicar validação de dados e criptografar senha
 	Enviar para o repositorio salvar o usuario
 	*/

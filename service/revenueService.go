@@ -11,7 +11,8 @@ import (
 
 // RevenueServiceInterface define o contrato do serviço.
 type RevenueServiceInterface interface {
-	Create(ctx context.Context, loggedInUserID uuid.UUID, data *model.RevenueData) (*model.Revenue, *apperror.AppError)
+	Create(ctx context.Context, loggedInUserID uuid.UUID, data *model.RevenueDto) (*model.Revenue, *apperror.AppError)
+	Find(ctx context.Context, data *model.RevenueSearchCriteria) ([]*model.Revenue, *apperror.AppError)
 }
 
 // revenueService é a implementação.
@@ -28,10 +29,19 @@ func NewRevenueService(revenueRepo repository.RevenueRepositoryInterface, client
 	}
 }
 
+func (service *revenueService) Find(ctx context.Context, data *model.RevenueSearchCriteria) ([]*model.Revenue, *apperror.AppError) {
+	revenues, err := service.RevenueRepo.Find(ctx, data)
+	if err != nil {
+		// Se o repositório retornar um erro, nós o "embrulhamos" num erro de aplicação.
+		return nil, apperror.InternalServer("Ocorreu um erro ao buscar as receitas.", err)
+	}
+	return revenues, nil
+}
+
 /*
 O usuario acessa a área de clientes, seleciona um cliente e adiciona uma revenue para ele, dessa forma, o revenue é passado no handler
 */
-func (service *revenueService) Create(ctx context.Context, loggedInUserID uuid.UUID, data *model.RevenueData) (*model.Revenue, *apperror.AppError) {
+func (service *revenueService) Create(ctx context.Context, loggedInUserID uuid.UUID, data *model.RevenueDto) (*model.Revenue, *apperror.AppError) {
 
 	parsedClientID, err := uuid.Parse(*data.ClientID)
 	if err != nil {
@@ -52,6 +62,7 @@ func (service *revenueService) Create(ctx context.Context, loggedInUserID uuid.U
 		Value:              data.Value,
 		TotalPaid:          data.TotalPaid,
 		Description:        data.Description,
+		IsDeclared:         data.IsDeclared,
 		IssueDate:          data.IssueDate,
 	}
 

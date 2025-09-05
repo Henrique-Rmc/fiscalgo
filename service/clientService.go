@@ -18,7 +18,7 @@ import (
 )
 
 type ClientServiceInterface interface {
-	CreateClient(ctx context.Context, clientData *model.ClientData, idUser uuid.UUID) (*model.Client, error)
+	CreateClient(ctx context.Context, ClientDto *model.ClientDto, idUser uuid.UUID) (*model.Client, error)
 	FindClient(ctx context.Context, queryData *model.ClientSearchCriteria) ([]*model.Client, error)
 	GetById(ctx context.Context, clientId uuid.UUID, userId uuid.UUID) (*model.Client, error)
 }
@@ -39,7 +39,7 @@ func NewClientService(clientRepo repository.ClientRepositoryInterface, userRepo 
 	}
 }
 
-func (clientService *clientService) CreateClient(ctx context.Context, clientData *model.ClientData, idUser uuid.UUID) (*model.Client, error) {
+func (clientService *clientService) CreateClient(ctx context.Context, ClientDto *model.ClientDto, idUser uuid.UUID) (*model.Client, error) {
 
 	user, err := clientService.UserRepo.FindUserById(ctx, idUser)
 	if err != nil {
@@ -51,11 +51,11 @@ func (clientService *clientService) CreateClient(ctx context.Context, clientData
 	clientToSave := &model.Client{
 		ID:          uuid.New(),
 		UserId:      user.ID,
-		Name:        clientData.Name,
-		Cpf:         clientData.Cpf,
-		Phone:       clientData.Phone,
-		Email:       *clientData.Email,
-		AsksInvoice: clientData.AsksInvoice,
+		Name:        ClientDto.Name,
+		Cpf:         ClientDto.Cpf,
+		Phone:       ClientDto.Phone,
+		Email:       *ClientDto.Email,
+		AsksInvoice: ClientDto.AsksInvoice,
 	}
 	//Cria um wait group para inserir o que desejamos consumir em sequencia
 

@@ -51,7 +51,7 @@ func TestUserService(t *testing.T) {
 			mockRepo := new(MockUserRepository)
 			userService := service.NewUserService(mockRepo, nil) 
 
-			createUserData := &model.UserData{
+			createUserData := &model.UserDto{
 				Name:                 "João Teste",
 				Email:                "joao.teste@email.com",
 				CPF:                  "11122233344",
@@ -93,7 +93,7 @@ func TestUserService(t *testing.T) {
 		t.Run("should return error when repository fails", func(t *testing.T) {
 			mockRepo := new(MockUserRepository)
 			userService := service.NewUserService(mockRepo, nil)
-			userData := &model.UserData{Password: "123"}
+			userData := &model.UserDto{Password: "123"}
 			expectedError := errors.New("database error")
 
 			mockRepo.On("CreateUser", mock.Anything, mock.AnythingOfType("*model.User")).

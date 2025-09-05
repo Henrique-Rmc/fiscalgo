@@ -18,11 +18,11 @@ type User struct {
 	UpdatedAt            time.Time `gorm:"column:updated_at" json:"updated_at"`
 }
 
-type UserData struct {
-	Name                 string
-	Email                string
-	CPF                  string
-	Password             string
-	Occupation           string
-	ProfessionalRegistry string
+type UserDto struct {
+	Name                 string `json:"name" validate:"required,min=2,max=100"`
+	Email                string `json:"email" validate:"required,email"`
+	CPF                  string `json:"cpf" validate:"required,len=11"` // Assumindo CPF sem formatação
+	Password             string `json:"password" validate:"required,min=8"`
+	Occupation           string `json:"occupation" validate:"required"`
+	ProfessionalRegistry string `json:"professional_registry" validate:"required"`
 }

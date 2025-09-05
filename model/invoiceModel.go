@@ -19,11 +19,12 @@ type Invoice struct {
 	UpdatedAt       time.Time `gorm:"column:updated_at" json:"updated_at"`
 }
 
-type InvoiceBody struct {
-	UserId          uuid.UUID
-	Description     string
-	Value           float64
-	ExpenseCategory string
-	AccessKey       string
-	IssueDate       time.Time
+
+type InvoiceDto struct {
+	UserId          uuid.UUID `json:"user_id" validate:"required,uuid"`
+	Description     string    `json:"description" validate:"required,min=3"`
+	Value           float64   `json:"value" validate:"required,gt=0"`
+	ExpenseCategory string    `json:"expense_category" validate:"required"`
+	AccessKey       string    `json:"access_key,omitempty" validate:"omitempty,len=44"` // Opcional, mas se existir, deve ter 44 caracteres
+	IssueDate       time.Time `json:"issue_date" validate:"required"`
 }

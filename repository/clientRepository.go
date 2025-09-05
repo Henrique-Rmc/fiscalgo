@@ -23,8 +23,8 @@ func NewClientRepository(db *gorm.DB) ClientRepositoryInterface {
 	return &ClientRepository{DB: db}
 }
 
-func (clientRepo *ClientRepository) CreateClient(ctx context.Context, clientData *model.Client) error {
-	err := clientRepo.DB.WithContext(ctx).Create(clientData).Error
+func (clientRepo *ClientRepository) CreateClient(ctx context.Context, ClientDto *model.Client) error {
+	err := clientRepo.DB.WithContext(ctx).Create(ClientDto).Error
 	if err != nil {
 		return err
 	}

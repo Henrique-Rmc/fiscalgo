@@ -24,8 +24,8 @@ func NewClientHandler(clientService service.ClientServiceInterface) ClientHandle
 func (clientHandler *ClientHandler) CreateClient(c *fiber.Ctx) error {
 	/*Quando Criar Login, ajustar para resgatar id pelo usuario logado*/
 	idUser := "6daa7ce0-6594-43ed-b583-c74bd6aa1a13"
-	clientData := new(model.ClientData)
-	if err := c.BodyParser(clientData); err != nil {
+	ClientDto := new(model.ClientDto)
+	if err := c.BodyParser(ClientDto); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "JSON invalido",
 		})
@@ -34,7 +34,7 @@ func (clientHandler *ClientHandler) CreateClient(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	client, err := clientHandler.ClientService.CreateClient(c.Context(), clientData, uuidUser)
+	client, err := clientHandler.ClientService.CreateClient(c.Context(), ClientDto, uuidUser)
 	if err != nil {
 		return err
 	}

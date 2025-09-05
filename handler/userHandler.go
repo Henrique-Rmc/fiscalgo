@@ -21,7 +21,7 @@ func NewUserHandler(userService service.UserServiceInterface) UserHandlerInterfa
 }
 
 func (userHandler *UserHandler) CreateUser(c *fiber.Ctx) error {
-	body := new(model.UserData)
+	body := new(model.UserDto)
 	if err := c.BodyParser(body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "JSON invalido",

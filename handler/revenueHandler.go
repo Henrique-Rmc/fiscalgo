@@ -31,7 +31,7 @@ func (h *RevenueHandler) CreateRevenueHandler(c *fiber.Ctx) error {
 	// 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Não autenticado."})
 	// }
 
-	revenueDto := new(model.RevenueData)
+	revenueDto := new(model.RevenueDto)
 	if err := c.BodyParser(revenueDto); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Corpo da requisição inválido."})
 	}

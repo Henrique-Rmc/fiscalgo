@@ -23,11 +23,10 @@ type Image struct {
 // 	File          io.Reader
 // }
 
-type ImageHeader struct {
-	FileName      string
-	FileExtension string
-	ContentType   string
-	FileSize      int64
-	File          io.Reader
-	FileCloser    io.ReadCloser
+type ImageDto struct {
+	FileName      string        `validate:"required"`
+	FileExtension string        `validate:"required,oneof=.jpg .jpeg .png"`
+	ContentType   string        `validate:"required"`
+	FileSize      int64         `validate:"required,lte=10485760"` // lte = Less Than or Equal (10MB)
+	File          io.ReadCloser // Unificado, pois ReadCloser já é um Reader
 }

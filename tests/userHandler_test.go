@@ -29,7 +29,7 @@ cria uma variavel args que vai ser do tipo m(mockService) passando os dados que 
 Nesse momento os dados sao atribuidos ao args(0)
 Verificamos se algo realmente foi inserido no args(0) e se foi, acessamos o retorno esperado
 */
-func (m *MockUserService) CreateUser(ctx context.Context, data *model.UserData) (*model.User, error) {
+func (m *MockUserService) CreateUser(ctx context.Context, data *model.UserDto) (*model.User, error) {
 	args := m.Called(ctx, data)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -62,7 +62,7 @@ func TestUserApi(t *testing.T) {
 	api.Get("/:userId", userHandler.GetUserById)
 
 	t.Run("Should Create User Successfully", func(t *testing.T) {
-		createUserData := model.UserData{
+		createUserData := model.UserDto{
 			Name:                 "João Teste",
 			Email:                "joao.teste@email.com",
 			CPF:                  "11122233344",

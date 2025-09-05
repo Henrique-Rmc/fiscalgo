@@ -9,7 +9,7 @@ import (
 )
 
 type ImageServiceInterface interface {
-	UploadImageService(ctx context.Context, data *model.ImageHeader, objectName string) error
+	UploadImageService(ctx context.Context, data *model.ImageDto, objectName string) error
 	// DownloadImageService(ctx context.Context, userId uuid.UUID, uniqueFileName string) (string, error)
 }
 
@@ -38,7 +38,7 @@ func NewImageService(imageRepo repository.ImageRepositoryInterface, userRepo rep
 }
 
 /*O service de invoice vai chaamr o uploadImage, dessa forma,id do invoice já vai ser passado diretamente*/
-func (service *ImageService) UploadImageService(ctx context.Context, data *model.ImageHeader, objectName string) error {
+func (service *ImageService) UploadImageService(ctx context.Context, data *model.ImageDto, objectName string) error {
 
 	_, err := service.MinioClient.PutObject(
 		ctx,

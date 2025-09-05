@@ -25,7 +25,7 @@ func NewInvoiceHandler(invoiceService service.InvoiceServiceInterface) InvoiceHa
 }
 
 func (handler *InvoiceHandler) CreateInvoiceHandler(c *fiber.Ctx) error {
-	body := new(model.InvoiceBody)
+	body := new(model.InvoiceDto)
 	metadata := c.FormValue("metadata")
 
 	if err := json.Unmarshal([]byte(metadata), &body); err != nil {
@@ -43,8 +43,8 @@ func (handler *InvoiceHandler) CreateInvoiceHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	if imageData != nil && imageData.FileCloser != nil {
-		defer imageData.FileCloser.Close()
+	if imageData != nil && imageData.File != nil {
+		defer imageData.File.Close()
 	}
 	fmt.Println(body.UserId, body.Value, body.AccessKey, body.Description, body.ExpenseCategory)
 	invoice, err := handler.InvoiceService.CreateInvoice(c.Context(), body, imageData)
