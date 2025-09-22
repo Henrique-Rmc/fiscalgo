@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiscalgo-deployment
+  namespace: fiscalgo-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fiscalgo
+  template:
+    metadata:
+      labels:
+        app: fiscalgo
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: fiscalgo-api
+        image: henriquermc0204/fiscalgo:1.0
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        envFrom:
+        - configMapRef:
+            name: fiscalgo-config
+        - secretRef:
+            name: fiscalgo-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fiscalgo-svc
+  namespace: fiscalgo-app
+spec:
+  type: LoadBalancer 
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: fiscalgo

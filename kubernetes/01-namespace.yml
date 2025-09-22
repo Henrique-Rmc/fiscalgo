@@ -1,0 +1,7 @@
+# kubernetes/01-namespace.yml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fiscalgo-app
+
+  

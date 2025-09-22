@@ -21,6 +21,7 @@ type RevenueRepositoryInterface interface {
 	Update(ctx context.Context, revenue *model.Revenue) error
 	Delete(ctx context.Context, revenueID, userID uuid.UUID) error
 	Find(ctx context.Context, criteria *model.RevenueSearchCriteria) ([]*model.Revenue, error)
+	// GetDeclaredSum(ctx context.Context, criteria *model.RevenueSearchCriteria) (float32, error)
 }
 
 // RevenueRepository é a implementação da interface.
@@ -33,10 +34,19 @@ func NewRevenueRepository(db *gorm.DB) RevenueRepositoryInterface {
 	return &RevenueRepository{DB: db}
 }
 
+/*
+-paciente inicia um pagamento
+-Total -400 paciente paga 200
+-Valor restante = 400
+Quando uma receita é declarada, eu subtraio do debito
+O valor pago é ZERADO
+Para saber o valor pago, Value - Debit = Total Paid
+*/
+
 func (r *RevenueRepository) DeclareRevenue(ctx context.Context, userID uuid.UUID, revenueID uuid.UUID) error {
 	result := r.DB.WithContext(ctx).
 		Model(&model.Revenue{}).
-		Where("user_id = ? AND id = ?", userID, revenueID).Update("is_declared", true)
+		Where("user_id = ? AND id = ?", userID, revenueID).Update("is_declared = ?, total_paid = 0", true)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -111,6 +121,17 @@ func (r *RevenueRepository) Delete(ctx context.Context, revenueID, userID uuid.U
 
 	return nil
 }
+
+/*
+O sistema vai receber uma data de inicio e uma data de fim para filtrar a soma que busca
+
+*/
+// func (r *RevenueRepository)GetDeclaredSum(ctx context.Context, criteria *model.RevenueSearchCriteria) (float32, error){
+// 	query := r.DB.WithContext(ctx).Where("user_id = ? AND is_declares = true", criteria.UserID)
+// 	if criteria.StartDate != ""{
+// 		query = query.Where("issue_date")
+// 	}
+// }
 
 func (r *RevenueRepository) Find(ctx context.Context, criteria *model.RevenueSearchCriteria) ([]*model.Revenue, error) {
 	var revenues []*model.Revenue

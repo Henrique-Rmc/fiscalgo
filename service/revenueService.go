@@ -60,6 +60,7 @@ func (service *revenueService) Create(ctx context.Context, loggedInUserID uuid.U
 		BeneficiaryCpfCnpj: data.BeneficiaryCpfCnpj,
 		ProcedureType:      data.ProcedureType,
 		Value:              data.Value,
+		Debit:              data.Value,
 		TotalPaid:          data.TotalPaid,
 		Description:        data.Description,
 		IsDeclared:         data.IsDeclared,

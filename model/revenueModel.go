@@ -17,6 +17,7 @@ type Revenue struct {
 	ProcedureType      string     `gorm:"type:varchar(255);not null;column:procedure_type" json:"procedure_type"`
 	BeneficiaryCpfCnpj string     `gorm:"type:varchar(18);not null;column:beneficiary_cpf_cnpj" json:"beneficiary_cpf_cnpj"`
 	Value              float64    `gorm:"type:decimal(10,2);not null" json:"value"`
+	Debit              float64    `json:"debit" validate:"required,gt=0"`
 	TotalPaid          float64    `gorm:"type:decimal(10,2);not null;column:total_paid" json:"total_paid"`
 	Description        string     `gorm:"type:text" json:"description"`
 	IsDeclared         bool       `gorm:"not null;default:false;column:is_declared" json:"is_declared"`

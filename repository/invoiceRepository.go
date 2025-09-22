@@ -13,6 +13,8 @@ import (
 
 type InvoiceRepositoryInterface interface {
 	CreateInvoice(ctx context.Context, invoiceData *model.Invoice) (*model.Invoice, error)
+	FindInvoiceById(ctx context.Context, id uuid.UUID) (*model.Invoice, error)
+	
 }
 
 type InvoiceRepository struct {

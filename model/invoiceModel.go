@@ -14,11 +14,12 @@ type Invoice struct {
 	ExpenseCategory string    `gorm:"type:varchar(255);not null;column:expense_category" json:"expense_category"`
 	AccessKey       string    `gorm:"type:varchar(44)" json:"access_key,omitempty"`
 	ImageURL        string    `gorm:"type:varchar(255);column:image_url" json:"image_url,omitempty"`
-	IssueDate       time.Time `gorm:"type:date;not null;column:issue_date" json:"issue_date"`
-	CreatedAt       time.Time `gorm:"column:created_at" json:"created_at"`
-	UpdatedAt       time.Time `gorm:"column:updated_at" json:"updated_at"`
+	IsDeclared      bool      `gorm:"not null;default:false;column:is_declared" json:"is_declared"`
+	
+	IssueDate time.Time `gorm:"type:date;not null;column:issue_date" json:"issue_date"`
+	CreatedAt time.Time `gorm:"column:created_at" json:"created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at" json:"updated_at"`
 }
-
 
 type InvoiceDto struct {
 	UserId          uuid.UUID `json:"user_id" validate:"required,uuid"`

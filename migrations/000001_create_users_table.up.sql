@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS revenues (
     beneficiary_cpf_cnpj VARCHAR(255) NOT NULL,
     procedure_type VARCHAR(255) NOT NULL,
     value DECIMAL(10, 2) NOT NULL,
+    debit DECIMAL(10, 2) NOT NULL,
     total_paid DECIMAL(10,2) NOT NULL,
     description VARCHAR(255) NOT NULL,
     is_declared BOOLEAN NOT NULL DEFAULT FALSE,
@@ -48,8 +49,18 @@ CREATE TABLE IF NOT EXISTS invoices(
     access_key VARCHAR(44),
     image_url VARCHAR(255),
     issue_date DATE NOT NULL,
+    is_declared BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE payments (
+    id UUID PRIMARY KEY,
+    revenue_id UUID NOT NULL REFERENCES revenues(id),
+    value_paid DECIMAL(10, 2) NOT NULL,
+    payment_date DATE NOT NULL,
+    is_declared BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_clients_user_id ON clients (user_id);

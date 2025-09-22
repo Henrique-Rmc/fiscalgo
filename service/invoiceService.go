@@ -55,6 +55,7 @@ func (service *InvoiceService) CreateInvoice(ctx context.Context, InvoiceDto *mo
 		Description:     InvoiceDto.Description,
 		Value:           InvoiceDto.Value,
 		ExpenseCategory: InvoiceDto.ExpenseCategory,
+		IsDeclared:      false,
 		AccessKey:       InvoiceDto.AccessKey,
 		ImageURL:        objectName,
 		IssueDate:       InvoiceDto.IssueDate,
