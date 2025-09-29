@@ -12,6 +12,7 @@ import (
 	"github.com/Henrique-Rmc/fiscalgo/database"
 	"github.com/Henrique-Rmc/fiscalgo/database/seed"
 	"github.com/Henrique-Rmc/fiscalgo/handler"
+	"github.com/Henrique-Rmc/fiscalgo/middleware"
 	"github.com/Henrique-Rmc/fiscalgo/repository"
 	"github.com/Henrique-Rmc/fiscalgo/routes"
 	"github.com/Henrique-Rmc/fiscalgo/service"
@@ -104,7 +105,9 @@ func main() {
 		os.Exit(0)
 	}
 	/*Iniciando Aplicação*/
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: middleware.ErrorHandlerMiddleware,
+	})
 	app.Use(
 		func(c *fiber.Ctx) error {
 			c.Locals("db", db)
@@ -115,22 +118,26 @@ func main() {
 	clientRepository := repository.NewClientRepository(db)
 	invoiceRepository := repository.NewInvoiceRepository(db)
 	revenueRepository := repository.NewRevenueRepository(db)
+	paymentRepository := repository.NewPaymentRepository(db)
 
 	userService := service.NewUserService(userRepository, rdb)
 	imageService := service.NewImageService(imageRepository, userRepository, minioClient, bucketName)
 	clientService := service.NewClientService(clientRepository, userRepository, rdb)
 	invoiceService := service.NewInvoiceService(invoiceRepository, userRepository, imageService)
 	revenueService := service.NewRevenueService(revenueRepository, clientRepository)
+	paymentService := service.NewPaymentService(paymentRepository, revenueRepository)
 
 	userHandler := handler.NewUserHandler(userService)
 	invoiceHandler := handler.NewInvoiceHandler(invoiceService)
 	clientHandler := handler.NewClientHandler(clientService)
 	revenueHandler := handler.NewRevenueHandler(revenueService)
+	paymentHandler := handler.NewPaymentHandler(paymentService)
 
 	routes.SetupClientRoutes(app, clientHandler)
 	routes.SetupUserRoutes(app, userHandler)
 	routes.SetupInvoiceRoutes(app, invoiceHandler)
 	routes.SetupRevenueRoutes(app, revenueHandler)
+	routes.SetupPaymentRoutes(app, paymentHandler)
 
 	port := ":8080"
 	fmt.Printf("Servidor Iniciado em http://localhost%s\n", port)

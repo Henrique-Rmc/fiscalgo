@@ -5,15 +5,10 @@ import (
 	"net/http"
 )
 
+// OperationError é um wrapper para erros internos que podem ou não ser fatais.
 type OperationError struct {
 	OriginalErr error
 	IsFatal     bool
-}
-
-type AppError struct {
-	Code    int
-	Message string
-	Err     error
 }
 
 func (e *OperationError) Error() string {
@@ -23,44 +18,56 @@ func (e *OperationError) Error() string {
 	return e.OriginalErr.Error()
 }
 
+// AppError representa um erro de aplicação padronizado.
+type AppError struct {
+	StatusCode int         `json:"status_code"`
+	Message    string      `json:"message"`
+	Err        error       `json:"-"`
+	Details    interface{} `json:"details,omitempty"`
+}
+
+func (e *AppError) Error() string {
+	return e.Message
+}
+
+// NotFound cria um erro para recurso não encontrado (HTTP 404).
 func NotFound(resource string, err error) *AppError {
 	return &AppError{
-		Code:    http.StatusNotFound, // 404
-		Message: fmt.Sprintf("%s não encontrado(a).", resource),
-		Err:     err,
+		StatusCode: http.StatusNotFound,
+		Message:    fmt.Sprintf("%s não encontrado(a).", resource),
+		Err:        err,
 	}
 }
 
-// Forbidden cria um erro para acesso não permitido (mapeia para HTTP 403).
+// Forbidden cria um erro para acesso não permitido (HTTP 403).
 func Forbidden(message string, err error) *AppError {
 	if message == "" {
 		message = "Você não tem permissão para executar esta ação."
 	}
 	return &AppError{
-		Code:    http.StatusForbidden, // 403
-		Message: message,
-		Err:     err,
+		StatusCode: http.StatusForbidden,
+		Message:    message,
+		Err:        err,
 	}
 }
 
-// UnprocessableEntity cria um erro para dados que são semanticamente inválidos (mapeia para HTTP 422).
-// A sintaxe está correta, mas as regras de negócio foram violadas.
+// UnprocessableEntity cria um erro para dados inválidos segundo regras de negócio (HTTP 422).
 func UnprocessableEntity(message string, err error) *AppError {
 	return &AppError{
-		Code:    http.StatusUnprocessableEntity, // 422
-		Message: message,
-		Err:     err,
+		StatusCode: http.StatusUnprocessableEntity,
+		Message:    message,
+		Err:        err,
 	}
 }
 
-// InternalServer cria um erro para falhas inesperadas (mapeia para HTTP 500).
+// InternalServer cria um erro para falhas inesperadas (HTTP 500).
 func InternalServer(message string, err error) *AppError {
 	if message == "" {
 		message = "Ocorreu um erro interno inesperado."
 	}
 	return &AppError{
-		Code:    http.StatusInternalServerError, // 500
-		Message: message,
-		Err:     err,
+		StatusCode: http.StatusInternalServerError,
+		Message:    message,
+		Err:        err,
 	}
 }

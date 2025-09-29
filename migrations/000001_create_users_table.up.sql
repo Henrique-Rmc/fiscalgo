@@ -57,10 +57,12 @@ CREATE TABLE IF NOT EXISTS invoices(
 CREATE TABLE payments (
     id UUID PRIMARY KEY,
     revenue_id UUID NOT NULL REFERENCES revenues(id),
+    debit DECIMAL(10, 2) NOT NULL,
     value_paid DECIMAL(10, 2) NOT NULL,
     payment_date DATE NOT NULL,
     is_declared BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_clients_user_id ON clients (user_id);

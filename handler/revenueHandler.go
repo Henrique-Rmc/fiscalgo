@@ -43,7 +43,10 @@ func (h *RevenueHandler) CreateRevenueHandler(c *fiber.Ctx) error {
 	}
 	newRevenue, appErr := h.RevenueService.Create(c.Context(), userUuid, revenueDto)
 	if appErr != nil {
-		return c.Status(appErr.Code).JSON(fiber.Map{"error": appErr.Message})
+		return c.Status(appErr.StatusCode).JSON(fiber.Map{
+			"error": appErr.Message,
+			"details": appErr.Details,
+		})
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(newRevenue)
