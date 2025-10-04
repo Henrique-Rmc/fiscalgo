@@ -16,7 +16,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: fiscalgo-api
-        image: henriquermc0204/fiscalgo:1.0
+        image: henriquermc0204/fiscalgo:2.0
         ports:
         - containerPort: 3000
         resources:
@@ -38,9 +38,10 @@ metadata:
   name: fiscalgo-svc
   namespace: fiscalgo-app
 spec:
-  type: LoadBalancer 
+  type: NodePort
   ports:
-  - port: 80
+  - port: 3000
     targetPort: 3000
+    nodePort: 30080
   selector:
     app: fiscalgo
